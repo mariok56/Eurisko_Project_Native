@@ -1,69 +1,78 @@
 import React from 'react';
+import { Platform, StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import VerificationScreen from '../screens/auth/VerificationScreen';
 import HomeScreen from '../screens/HomeScreen';
+import ProductListScreen from '../screens/products/ProductListScreen';
+import ProductDetailScreen from '../screens/products/ProductDetailScreen';
 import { RootStackParamList } from '../types/navigation';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator: React.FC = () => {
   const { isAuthenticated } = useAuth();
+  const { colors, isDarkMode } = useTheme();
+
+  React.useEffect(() => {
+    if (Platform.OS === 'android') {
+      StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
+      StatusBar.setBackgroundColor(colors.background);
+    }
+  }, [isDarkMode, colors]);
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: '#f9f9f9',
-          },
-          headerShadowVisible: false,
-          headerTitleStyle: {
-            fontWeight: '600',
-          },
-        }}
-      >
-        {isAuthenticated ? (
-          // Authenticated routes
-          <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{
-              title: 'Home',
-            }}
-          />
-        ) : (
-          // Authentication routes
-          <>
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="Register"
-              component={RegisterScreen}
-              options={{
-                title: 'Create Account',
-              }}
-            />
-            <Stack.Screen
-              name="Verification"
-              component={VerificationScreen}
-              options={{
-                title: 'Verification',
-              }}
-            />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+            animation: 'slide_from_right',
+          }}
+        >
+          {isAuthenticated ? (
+            // Authenticated routes
+            <>
+              <Stack.Screen
+                name="Home"
+                component={HomeScreen}
+              />
+              <Stack.Screen
+                name="ProductList"
+                component={ProductListScreen}
+              />
+              <Stack.Screen
+                name="ProductDetail"
+                component={ProductDetailScreen}
+              />
+            </>
+          ) : (
+            // Authentication routes
+            <>
+              <Stack.Screen
+                name="Login"
+                component={LoginScreen}
+              />
+              <Stack.Screen
+                name="Register"
+                component={RegisterScreen}
+              />
+              <Stack.Screen
+                name="Verification"
+                component={VerificationScreen}
+              />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 };
 

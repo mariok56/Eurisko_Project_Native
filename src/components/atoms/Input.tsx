@@ -8,6 +8,9 @@ import {
   KeyboardTypeOptions 
 } from 'react-native';
 import { Controller, Control } from 'react-hook-form';
+import { useTheme } from '../../contexts/ThemeContext';
+import { getResponsiveValue } from '../../utils/responsive';
+import fontVariants from '../../assets/fonts/fonts';
 
 interface InputProps extends TextInputProps {
   name: string;
@@ -27,55 +30,75 @@ const Input: React.FC<InputProps> = ({
   keyboardType = 'default',
   ...rest
 }) => {
+  const { colors } = useTheme();
+  
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>{label}</Text>
+      {label && (
+        <Text 
+          style={[
+            styles.label, 
+            { color: colors.text },
+            fontVariants.bodyBold
+          ]}
+        >
+          {label}
+        </Text>
+      )}
       <Controller
         control={control}
         name={name}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
-            style={[styles.input, error && styles.errorInput]}
+            style={[
+              styles.input, 
+              { 
+                borderColor: error ? colors.error : colors.border,
+                backgroundColor: colors.card,
+                color: colors.text
+              },
+              fontVariants.body
+            ]}
             onChangeText={onChange}
             onBlur={onBlur}
             value={value}
             secureTextEntry={secureTextEntry}
             keyboardType={keyboardType}
+            placeholderTextColor={colors.border}
             {...rest}
           />
         )}
       />
-      {error && <Text style={styles.errorText}>{error}</Text>}
+      {error && (
+        <Text 
+          style={[
+            styles.errorText, 
+            { color: colors.error },
+            fontVariants.caption
+          ]}
+        >
+          {error}
+        </Text>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginBottom: 16,
+    marginBottom: getResponsiveValue(16),
     width: '100%',
   },
   label: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 6,
-    color: '#333',
+    marginBottom: getResponsiveValue(6),
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  errorInput: {
-    borderColor: '#ff4d4f',
+    borderRadius: getResponsiveValue(8),
+    padding: getResponsiveValue(12),
   },
   errorText: {
-    color: '#ff4d4f',
-    fontSize: 12,
-    marginTop: 4,
+    marginTop: getResponsiveValue(4),
   },
 });
 

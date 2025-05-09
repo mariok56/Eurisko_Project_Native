@@ -6,9 +6,13 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
 import OtpInput from '../../components/atoms/OtpInput';
 import Button from '../../components/atoms/Button';
-import { VerificationFormData,verificationSchema } from '../../utils/validation';
+import Header from '../../components/molecules/Header';
+import { VerificationFormData, verificationSchema } from '../../utils/validation';
 import { RootStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { getResponsiveValue } from '../../utils/responsive';
+import fontVariants from '../../assets/fonts/fonts';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Verification'>;
 
@@ -17,6 +21,7 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
   const { verify, login, isLoading } = useAuth();
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [timer, setTimer] = useState<number>(60);
+  const { colors } = useTheme();
 
   const { control, handleSubmit, formState: { errors } } = useForm<VerificationFormData>({
     resolver: zodResolver(verificationSchema),
@@ -57,10 +62,26 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <Header title="Verification" showBackButton />
+      
       <View style={styles.content}>
-        <Text style={styles.title}>Verify Your Account</Text>
-        <Text style={styles.subtitle}>
+        <Text 
+          style={[
+            styles.title, 
+            { color: colors.text },
+            fontVariants.heading1
+          ]}
+        >
+          Verify Your Account
+        </Text>
+        <Text 
+          style={[
+            styles.subtitle, 
+            { color: colors.text },
+            fontVariants.body
+          ]}
+        >
           Enter the 4-digit code sent to {email}
         </Text>
 
@@ -69,8 +90,9 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
             style={[
               styles.messageText, 
               verificationError.includes('Invalid') 
-                ? styles.errorText 
-                : styles.successText
+                ? { color: colors.error }
+                : { color: colors.success },
+              fontVariants.bodyBold
             ]}
           >
             {verificationError}
@@ -90,13 +112,31 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
         />
 
         <View style={styles.resendContainer}>
-          <Text style={styles.resendText}>
+          <Text 
+            style={[
+              styles.resendText, 
+              { color: colors.text },
+              fontVariants.body
+            ]}
+          >
             Didn't receive a code?{' '}
             {timer > 0 ? (
-              <Text style={styles.timerText}>Resend in {timer}s</Text>
+              <Text 
+                style={[
+                  styles.timerText, 
+                  { color: colors.border },
+                  fontVariants.body
+                ]}
+              >
+                Resend in {timer}s
+              </Text>
             ) : (
               <Text 
-                style={styles.resendLinkText}
+                style={[
+                  styles.resendLinkText, 
+                  { color: colors.primary },
+                  fontVariants.bodyBold
+                ]}
                 onPress={resendCode}
               >
                 Resend
@@ -112,51 +152,33 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
   },
   content: {
     flex: 1,
-    padding: 24,
+    padding: getResponsiveValue(24),
     justifyContent: 'center',
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-    color: '#333',
     textAlign: 'center',
+    marginBottom: getResponsiveValue(8),
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 32,
     textAlign: 'center',
+    marginBottom: getResponsiveValue(32),
   },
   messageText: {
-    marginBottom: 16,
-    fontSize: 14,
+    marginBottom: getResponsiveValue(16),
     textAlign: 'center',
-  },
-  errorText: {
-    color: '#ff4d4f',
-  },
-  successText: {
-    color: '#52c41a',
   },
   resendContainer: {
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: getResponsiveValue(24),
   },
   resendText: {
-    color: '#666',
-    fontSize: 14,
   },
   timerText: {
-    color: '#999',
   },
   resendLinkText: {
-    color: '#4361EE',
-    fontWeight: '600',
   },
 });
 

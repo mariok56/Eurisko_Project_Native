@@ -7,6 +7,9 @@ import {
   Keyboard,
 } from 'react-native';
 import { Control, Controller } from 'react-hook-form';
+import { useTheme } from '../../contexts/ThemeContext';
+import { getResponsiveValue } from '../../utils/responsive';
+import fontVariants from '../../assets/fonts/fonts';
 
 interface OtpInputProps {
   name: string;
@@ -21,6 +24,7 @@ const OtpInput: React.FC<OtpInputProps> = ({
   error,
   onComplete,
 }) => {
+  const { colors } = useTheme();
   const inputRefs = useRef<Array<React.RefObject<TextInput | null>>>(
     Array(4).fill(null).map(() => createRef<TextInput>())
   );
@@ -45,7 +49,14 @@ const OtpInput: React.FC<OtpInputProps> = ({
                 <TextInput
                   key={index}
                   ref={inputRefs.current[index]}
-                  style={[styles.input, error && styles.errorInput]}
+                  style={[
+                    styles.input, 
+                    { 
+                      borderColor: error ? colors.error : colors.border,
+                      backgroundColor: colors.card,
+                      color: colors.text
+                    }
+                  ]}
                   maxLength={1}
                   keyboardType="number-pad"
                   onChangeText={(text) => {
@@ -71,7 +82,17 @@ const OtpInput: React.FC<OtpInputProps> = ({
                 />
               ))}
             </View>
-            {error && <Text style={styles.errorText}>{error}</Text>}
+            {error && (
+              <Text 
+                style={[
+                  styles.errorText, 
+                  { color: colors.error },
+                  fontVariants.caption
+                ]}
+              >
+                {error}
+              </Text>
+            )}
           </View>
         )}
       />
@@ -82,7 +103,7 @@ const OtpInput: React.FC<OtpInputProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    marginVertical: 16,
+    marginVertical: getResponsiveValue(16),
   },
   inputContainer: {
     flexDirection: 'row',
@@ -90,22 +111,16 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   input: {
-    width: 60,
-    height: 60,
+    width: getResponsiveValue(60),
+    height: getResponsiveValue(60),
     borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
+    borderRadius: getResponsiveValue(8),
     textAlign: 'center',
-    fontSize: 24,
+    fontSize: getResponsiveValue(24),
     fontWeight: '600',
   },
-  errorInput: {
-    borderColor: '#ff4d4f',
-  },
   errorText: {
-    color: '#ff4d4f',
-    fontSize: 12,
-    marginTop: 4,
+    marginTop: getResponsiveValue(4),
     textAlign: 'center',
   },
 });

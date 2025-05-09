@@ -23,7 +23,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     // Simple mock login
     // In a real app, this would be an API call
     try {
-      // Check for the hardcoded credentials
+      // Check for the hardcoded credentials (email and password)
       if (email === 'eurisko@gmail.com' && password === 'academy2025') {
         const user: User = {
           name: 'Eurisko User',

@@ -6,6 +6,9 @@ import {
   ActivityIndicator,
   TouchableOpacityProps 
 } from 'react-native';
+import { useTheme } from '../../contexts/ThemeContext';
+import { getResponsiveValue } from '../../utils/responsive';
+import fontVariants from '../../assets/fonts/fonts';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;
@@ -19,25 +22,32 @@ const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   ...rest 
 }) => {
+  const { colors } = useTheme();
+  
   return (
     <TouchableOpacity
       style={[
         styles.button,
-        variant === 'primary' && styles.primaryButton,
-        variant === 'secondary' && styles.secondaryButton,
-        variant === 'outline' && styles.outlineButton,
+        variant === 'primary' && { backgroundColor: colors.primary },
+        variant === 'secondary' && { backgroundColor: colors.secondary },
+        variant === 'outline' && { 
+          backgroundColor: 'transparent', 
+          borderWidth: 1, 
+          borderColor: colors.primary 
+        },
         rest.disabled && styles.disabledButton
       ]}
       disabled={loading || rest.disabled}
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={variant === 'outline' ? colors.primary : '#fff'} />
       ) : (
         <Text 
           style={[
             styles.buttonText,
-            variant === 'outline' && styles.outlineButtonText
+            fontVariants.button,
+            { color: variant === 'outline' ? colors.primary : '#fff' }
           ]}
         >
           {title}
@@ -49,33 +59,17 @@ const Button: React.FC<ButtonProps> = ({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 8,
-    padding: 15,
+    borderRadius: getResponsiveValue(8),
+    padding: getResponsiveValue(15),
     alignItems: 'center',
     justifyContent: 'center',
-    marginVertical: 10,
-  },
-  primaryButton: {
-    backgroundColor: '#4361EE',
-  },
-  secondaryButton: {
-    backgroundColor: '#3A86FF',
-  },
-  outlineButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#4361EE',
+    marginVertical: getResponsiveValue(10),
   },
   disabledButton: {
     opacity: 0.6,
   },
   buttonText: {
-    color: 'white',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  outlineButtonText: {
-    color: '#4361EE',
+    textAlign: 'center',
   },
 });
 
