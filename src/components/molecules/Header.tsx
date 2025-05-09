@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
@@ -75,7 +75,6 @@ const styles = StyleSheet.create({
     height: getResponsiveValue(56),
     paddingHorizontal: getResponsiveValue(16),
     borderBottomWidth: 1,
-    paddingTop: Platform.OS === 'ios' ? getResponsiveValue(4) : 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,

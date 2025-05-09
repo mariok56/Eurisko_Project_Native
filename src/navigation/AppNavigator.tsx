@@ -7,7 +7,6 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import VerificationScreen from '../screens/auth/VerificationScreen';
-import HomeScreen from '../screens/HomeScreen';
 import ProductListScreen from '../screens/products/ProductListScreen';
 import ProductDetailScreen from '../screens/products/ProductDetailScreen';
 import { RootStackParamList } from '../types/navigation';
@@ -29,6 +28,11 @@ const AppNavigator: React.FC = () => {
 
   return (
     <SafeAreaProvider>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+        translucent={true}
+      />
       <NavigationContainer>
         <Stack.Navigator
           screenOptions={{
@@ -38,12 +42,7 @@ const AppNavigator: React.FC = () => {
           }}
         >
           {isAuthenticated ? (
-            // Authenticated routes
             <>
-              <Stack.Screen
-                name="Home"
-                component={HomeScreen}
-              />
               <Stack.Screen
                 name="ProductList"
                 component={ProductListScreen}
@@ -54,7 +53,6 @@ const AppNavigator: React.FC = () => {
               />
             </>
           ) : (
-            // Authentication routes
             <>
               <Stack.Screen
                 name="Login"

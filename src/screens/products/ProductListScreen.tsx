@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, StyleSheet, View } from 'react-native';
+import { StyleSheet, View, StatusBar, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../../types/navigation';
 import Header from '../../components/molecules/Header';
 import ProductList from '../../components/organisms/ProductList';
@@ -13,9 +14,14 @@ type Props = NativeStackScreenProps<RootStackParamList, 'ProductList'>;
 const ProductListScreen: React.FC<Props> = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   useEffect(() => {
+    StatusBar.setBarStyle(isDarkMode ? 'light-content' : 'dark-content');
+    if (Platform.OS === 'android') {
+      StatusBar.setBackgroundColor(colors.background);
+    }
+
     // Simulate API call
     const fetchProducts = async () => {
       try {
@@ -31,7 +37,7 @@ const ProductListScreen: React.FC<Props> = () => {
     };
 
     fetchProducts();
-  }, []);
+  }, [colors.background, isDarkMode]);
 
   const handleRefresh = () => {
     setLoading(true);
@@ -43,17 +49,23 @@ const ProductListScreen: React.FC<Props> = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Header title="Products" showBackButton={true} />
-      <View style={styles.content}>
-        <ProductList
-          products={products}
-          loading={loading}
-          onRefresh={handleRefresh}
-          refreshing={loading}
-        />
-      </View>
-    </SafeAreaView>
+    <>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+      />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <Header title="Products" showBackButton={false} showThemeToggle={true} />
+        <View style={styles.content}>
+          <ProductList
+            products={products}
+            loading={loading}
+            onRefresh={handleRefresh}
+            refreshing={loading}
+          />
+        </View>
+      </SafeAreaView>
+    </>
   );
 };
 

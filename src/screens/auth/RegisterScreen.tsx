@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, StatusBar } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AuthForm from '../../components/organisms/AuthForm';
 import Header from '../../components/molecules/Header';
@@ -17,7 +18,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
 const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   const { register, isLoading } = useAuth();
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   const { control, handleSubmit, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -38,7 +39,6 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
     );
     
     if (success) {
-      // Navigate to verification screen with email and password
       navigation.navigate('Verification', {
         email: data.email,
         password: data.password,
@@ -74,64 +74,71 @@ const RegisterScreen: React.FC<Props> = ({ navigation }) => {
   ];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Header title="Create Account" showBackButton />
-      
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <Text 
-            style={[
-              styles.title, 
-              { color: colors.text },
-              fontVariants.heading1
-            ]}
-          >
-            Create Account
-          </Text>
-          <Text 
-            style={[
-              styles.subtitle, 
-              { color: colors.text },
-              fontVariants.body
-            ]}
-          >
-            Sign up to get started
-          </Text>
-
-          <AuthForm
-            fields={formFields}
-            control={control}
-            errors={errors}
-            onSubmit={handleSubmit(onSubmit)}
-            submitButtonText="Register"
-            isLoading={isLoading}
-          />
-
-          <View style={styles.footerContainer}>
+    <>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+        translucent={true}
+      />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <Header title="Create Account" showBackButton />
+        
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.content}>
             <Text 
               style={[
-                styles.footerText, 
+                styles.title, 
+                { color: colors.text },
+                fontVariants.heading1
+              ]}
+            >
+              Create Account
+            </Text>
+            <Text 
+              style={[
+                styles.subtitle, 
                 { color: colors.text },
                 fontVariants.body
               ]}
             >
-              Already have an account? 
+              Sign up to get started
             </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+
+            <AuthForm
+              fields={formFields}
+              control={control}
+              errors={errors}
+              onSubmit={handleSubmit(onSubmit)}
+              submitButtonText="Register"
+              isLoading={isLoading}
+            />
+
+            <View style={styles.footerContainer}>
               <Text 
                 style={[
-                  styles.linkText, 
-                  { color: colors.primary },
-                  fontVariants.bodyBold
+                  styles.footerText, 
+                  { color: colors.text },
+                  fontVariants.body
                 ]}
               >
-                Sign in
+                Already have an account? 
               </Text>
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <Text 
+                  style={[
+                    styles.linkText, 
+                    { color: colors.primary },
+                    fontVariants.bodyBold
+                  ]}
+                >
+                  Sign in
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 };
 

@@ -29,11 +29,10 @@ const darkColors: ThemeColors = {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  // Default theme based on system preference
+
   const colorScheme = useColorScheme();
   const [isDarkMode, setIsDarkMode] = useState(colorScheme === 'dark');
   
-  // Update theme if system preference changes
   useEffect(() => {
     setIsDarkMode(colorScheme === 'dark');
   }, [colorScheme]);

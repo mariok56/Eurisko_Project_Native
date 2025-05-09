@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, StatusBar } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import OtpInput from '../../components/atoms/OtpInput';
 import Button from '../../components/atoms/Button';
@@ -17,11 +18,11 @@ import fontVariants from '../../assets/fonts/fonts';
 type Props = NativeStackScreenProps<RootStackParamList, 'Verification'>;
 
 const VerificationScreen: React.FC<Props> = ({ route }) => {
-  const { email, password } = route.params;
+  const { email } = route.params;
   const { verify, login, isLoading } = useAuth();
   const [verificationError, setVerificationError] = useState<string | null>(null);
   const [timer, setTimer] = useState<number>(60);
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   const { control, handleSubmit, formState: { errors } } = useForm<VerificationFormData>({
     resolver: zodResolver(verificationSchema),
@@ -44,8 +45,8 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
     const success = await verify(data.code);
     
     if (success) {
-      // After successful verification, log in the user
-      await login(email, password);
+      // Use hardcoded credentials
+      await login('eurisko@gmail.com', 'academy2025');
     } else {
       setVerificationError('Invalid verification code');
     }
@@ -62,90 +63,96 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Header title="Verification" showBackButton />
-      
-      <View style={styles.content}>
-        <Text 
-          style={[
-            styles.title, 
-            { color: colors.text },
-            fontVariants.heading1
-          ]}
-        >
-          Verify Your Account
-        </Text>
-        <Text 
-          style={[
-            styles.subtitle, 
-            { color: colors.text },
-            fontVariants.body
-          ]}
-        >
-          Enter the 4-digit code sent to {email}
-        </Text>
-
-        {verificationError && (
+    <>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+        translucent={true}
+      />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <Header title="Verification" showBackButton />     
+        <View style={styles.content}>
           <Text 
             style={[
-              styles.messageText, 
-              verificationError.includes('Invalid') 
-                ? { color: colors.error }
-                : { color: colors.success },
-              fontVariants.bodyBold
+              styles.title, 
+              { color: colors.text },
+              fontVariants.heading1
             ]}
           >
-            {verificationError}
+            Verify Your Account
           </Text>
-        )}
-
-        <OtpInput
-          name="code"
-          control={control}
-          error={errors.code?.message}
-        />
-
-        <Button
-          title="Verify"
-          onPress={handleSubmit(onSubmit)}
-          loading={isLoading}
-        />
-
-        <View style={styles.resendContainer}>
           <Text 
             style={[
-              styles.resendText, 
+              styles.subtitle, 
               { color: colors.text },
               fontVariants.body
             ]}
           >
-            Didn't receive a code?{' '}
-            {timer > 0 ? (
-              <Text 
-                style={[
-                  styles.timerText, 
-                  { color: colors.border },
-                  fontVariants.body
-                ]}
-              >
-                Resend in {timer}s
-              </Text>
-            ) : (
-              <Text 
-                style={[
-                  styles.resendLinkText, 
-                  { color: colors.primary },
-                  fontVariants.bodyBold
-                ]}
-                onPress={resendCode}
-              >
-                Resend
-              </Text>
-            )}
+            Enter the 4-digit code sent to {email}
           </Text>
+
+          {verificationError && (
+            <Text 
+              style={[
+                styles.messageText, 
+                verificationError.includes('Invalid') 
+                  ? { color: colors.error }
+                  : { color: colors.success },
+                fontVariants.bodyBold
+              ]}
+            >
+              {verificationError}
+            </Text>
+          )}
+
+          <OtpInput
+            name="code"
+            control={control}
+            error={errors.code?.message}
+          />
+
+          <Button
+            title="Verify"
+            onPress={handleSubmit(onSubmit)}
+            loading={isLoading}
+          />
+
+          <View style={styles.resendContainer}>
+            <Text 
+              style={[
+                styles.resendText, 
+                { color: colors.text },
+                fontVariants.body
+              ]}
+            >
+              Didn't receive a code?{' '}
+              {timer > 0 ? (
+                <Text 
+                  style={[
+                    styles.timerText, 
+                    { color: colors.border },
+                    fontVariants.body
+                  ]}
+                >
+                  Resend in {timer}s
+                </Text>
+              ) : (
+                <Text 
+                  style={[
+                    styles.resendLinkText, 
+                    { color: colors.primary },
+                    fontVariants.bodyBold
+                  ]}
+                  onPress={resendCode}
+                >
+                  Resend
+                </Text>
+              )}
+            </Text>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 };
 

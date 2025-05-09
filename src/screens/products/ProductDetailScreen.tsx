@@ -7,9 +7,10 @@ import {
   Image,
   TouchableOpacity,
   Share,
-  SafeAreaView,
+  StatusBar,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../../types/navigation';
 import { Product } from '../../types/product';
 import Header from '../../components/molecules/Header';
@@ -25,7 +26,7 @@ const ProductDetailScreen: React.FC<Props> = ({ route }) => {
   const { productId } = route.params;
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   useEffect(() => {
     // In a real app, this would be an API call
@@ -66,82 +67,96 @@ const ProductDetailScreen: React.FC<Props> = ({ route }) => {
 
   if (loading || !product) {
     return (
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-        <Header title="Loading..." showBackButton />
-        <View style={styles.loadingContainer}>
-          <Text style={[{ color: colors.text }, fontVariants.body]}>Loading product details...</Text>
-        </View>
-      </SafeAreaView>
+      <>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.background}
+          translucent={true}
+        />
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+          <Header title="Loading..." showBackButton />
+          <View style={styles.loadingContainer}>
+            <Text style={[{ color: colors.text }, fontVariants.body]}>Loading product details...</Text>
+          </View>
+        </SafeAreaView>
+      </>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <Header title={product.title} showBackButton />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Image
-          source={{ uri: product.images[0]?.url }}
-          style={styles.image}
-          resizeMode="cover"
-        />
+    <>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+        translucent={true}
+      />
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+        <Header title={product.title} showBackButton />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <Image
+            source={{ uri: product.images[0]?.url }}
+            style={styles.image}
+            resizeMode="cover"
+          />
 
-        <View style={styles.contentContainer}>
-          <View style={styles.titleRow}>
-            <Text 
-              style={[
-                styles.title, 
-                { color: colors.text },
-                fontVariants.heading2
-              ]}
-            >
-              {product.title}
-            </Text>
-            <Text 
-              style={[
-                styles.price, 
-                { color: colors.primary },
-                fontVariants.heading2
-              ]}
-            >
-              ${product.price.toFixed(2)}
-            </Text>
-          </View>
-
-          <Text 
-            style={[
-              styles.description, 
-              { color: colors.text },
-              fontVariants.body
-            ]}
-          >
-            {product.description}
-          </Text>
-
-          <View style={styles.buttonsContainer}>
-            <TouchableOpacity
-              style={[styles.shareButton, { borderColor: colors.border }]}
-              onPress={handleShare}
-            >
+          <View style={styles.contentContainer}>
+            <View style={styles.titleRow}>
               <Text 
                 style={[
-                  styles.shareButtonText, 
+                  styles.title, 
                   { color: colors.text },
-                  fontVariants.button
+                  fontVariants.heading2
                 ]}
               >
-                Share
+                {product.title}
               </Text>
-            </TouchableOpacity>
+              <Text 
+                style={[
+                  styles.price, 
+                  { color: colors.primary },
+                  fontVariants.heading2
+                ]}
+              >
+                ${product.price.toFixed(2)}
+              </Text>
+            </View>
 
-            <Button
-              title="Add to Cart"
-              onPress={handleAddToCart}
-              variant="primary"
-            />
+            <Text 
+              style={[
+                styles.description, 
+                { color: colors.text },
+                fontVariants.body
+              ]}
+            >
+              {product.description}
+            </Text>
+
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity
+                style={[styles.shareButton, { borderColor: colors.border }]}
+                onPress={handleShare}
+              >
+                <Text 
+                  style={[
+                    styles.shareButtonText, 
+                    { color: colors.text },
+                    fontVariants.button
+                  ]}
+                >
+                  Share
+                </Text>
+              </TouchableOpacity>
+
+              <Button
+                title="Add to Cart"
+                onPress={handleAddToCart}
+                variant="primary"
+              />
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 };
 
