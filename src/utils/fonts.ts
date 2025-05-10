@@ -4,20 +4,20 @@ import { getResponsiveFontSize } from './responsive';
 export const fontVariants: Record<string, TextStyle> = {
   heading1: {
     fontSize: getResponsiveFontSize(28),
-    fontFamily: 'Inter-Bold',
-    fontWeight: '700',
+    fontFamily: 'Inter-Regular',
+    fontWeight: '700', 
     lineHeight: getResponsiveFontSize(34),
   },
   heading2: {
     fontSize: getResponsiveFontSize(24),
-    fontFamily: 'Inter-Bold',
-    fontWeight: '700',
+    fontFamily: 'Inter-Regular',
+    fontWeight: '700', 
     lineHeight: getResponsiveFontSize(30),
   },
   heading3: {
     fontSize: getResponsiveFontSize(20),
-    fontFamily: 'Inter-SemiBold',
-    fontWeight: '600',
+    fontFamily: 'Inter-Regular',
+    fontWeight: '600', 
     lineHeight: getResponsiveFontSize(26),
   },
   body: {
@@ -28,7 +28,7 @@ export const fontVariants: Record<string, TextStyle> = {
   },
   bodyBold: {
     fontSize: getResponsiveFontSize(16),
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Inter-Regular',
     fontWeight: '600',
     lineHeight: getResponsiveFontSize(22),
   },
@@ -40,10 +40,9 @@ export const fontVariants: Record<string, TextStyle> = {
   },
   button: {
     fontSize: getResponsiveFontSize(16),
-    fontFamily: 'Inter-SemiBold',
+    fontFamily: 'Inter-Regular',
     fontWeight: '600',
     lineHeight: getResponsiveFontSize(22),
   },
 };
-
 export default fontVariants;
