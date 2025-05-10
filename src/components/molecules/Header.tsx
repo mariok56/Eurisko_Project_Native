@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
-import fontVariants from '../../assets/fonts/fonts';
+import fontVariants from '../../utils/fonts';
 import ThemeToggle from '../atoms/ThemeToggle';
 
 interface HeaderProps {

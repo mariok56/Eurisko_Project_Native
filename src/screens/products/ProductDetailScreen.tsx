@@ -17,7 +17,7 @@ import Header from '../../components/molecules/Header';
 import Button from '../../components/atoms/Button';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
-import fontVariants from '../../assets/fonts/fonts';
+import fontVariants from '../../utils/fonts';
 import productsData from '../../data/Products.json';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;

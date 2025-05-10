@@ -11,7 +11,7 @@ import { RootStackParamList } from '../../types/navigation';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
-import fontVariants from '../../assets/fonts/fonts';
+import fontVariants from '../../utils/fonts';
 import Header from '../../components/molecules/Header';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;

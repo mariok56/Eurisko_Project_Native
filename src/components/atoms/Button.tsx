@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
-import fontVariants from '../../assets/fonts/fonts';
+import fontVariants from '../../utils/fonts';
 
 interface ButtonProps extends TouchableOpacityProps {
   title: string;

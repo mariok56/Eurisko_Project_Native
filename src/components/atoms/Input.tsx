@@ -10,7 +10,7 @@ import {
 import { Controller, Control } from 'react-hook-form';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
-import fontVariants from '../../assets/fonts/fonts';
+import fontVariants from '../../utils/fonts';
 
 interface InputProps extends TextInputProps {
   name: string;

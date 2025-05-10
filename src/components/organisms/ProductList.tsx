@@ -4,7 +4,7 @@ import ProductCard from '../molecules/ProductCard';
 import { Product } from '../../types/product';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
-import fontVariants from '../../assets/fonts/fonts';
+import fontVariants from '../../utils/fonts';
 
 interface ProductListProps {
   products: Product[];

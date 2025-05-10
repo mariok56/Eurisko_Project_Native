@@ -5,7 +5,7 @@ import Button from '../atoms/Button';
 import FormField from '../molecules/FormField';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
-import fontVariants from '../../assets/fonts/fonts';
+import fontVariants from '../../utils/fonts';
 
 interface FormField {
   name: string;

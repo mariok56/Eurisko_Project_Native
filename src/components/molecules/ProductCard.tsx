@@ -6,7 +6,7 @@ import { RootStackParamList } from '../../types/navigation';
 import { Product } from '../../types/product';
 import { useTheme } from '../../contexts/ThemeContext';
 import { getResponsiveValue } from '../../utils/responsive';
-import fontVariants from '../../assets/fonts/fonts';
+import fontVariants from '../../utils/fonts';
 
 interface ProductCardProps {
   product: Product;
