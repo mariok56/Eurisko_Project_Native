@@ -1,9 +1,15 @@
 import React from 'react';
-import { FlatList, StyleSheet, View, ActivityIndicator, Text } from 'react-native';
+import {
+  FlatList,
+  StyleSheet,
+  View,
+  ActivityIndicator,
+  Text,
+} from 'react-native';
 import ProductCard from '../molecules/ProductCard';
-import { Product } from '../../types/product';
-import { useTheme } from '../../contexts/ThemeContext';
-import { getResponsiveValue } from '../../utils/responsive';
+import {Product} from '../../types/product';
+import {useTheme} from '../../contexts/ThemeContext';
+import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
 
 interface ProductListProps {
@@ -21,7 +27,7 @@ const ProductList: React.FC<ProductListProps> = ({
   onRefresh,
   refreshing = false,
 }) => {
-  const { colors } = useTheme();
+  const {colors} = useTheme();
 
   if (loading && !refreshing) {
     return (
@@ -34,13 +40,8 @@ const ProductList: React.FC<ProductListProps> = ({
   if (error) {
     return (
       <View style={styles.errorContainer}>
-        <Text 
-          style={[
-            styles.errorText, 
-            { color: colors.error },
-            fontVariants.body
-          ]}
-        >
+        <Text
+          style={[styles.errorText, {color: colors.error}, fontVariants.body]}>
           {error}
         </Text>
       </View>
@@ -50,13 +51,8 @@ const ProductList: React.FC<ProductListProps> = ({
   if (products.length === 0 && !loading) {
     return (
       <View style={styles.emptyContainer}>
-        <Text 
-          style={[
-            styles.emptyText, 
-            { color: colors.text },
-            fontVariants.body
-          ]}
-        >
+        <Text
+          style={[styles.emptyText, {color: colors.text}, fontVariants.body]}>
           No products found
         </Text>
       </View>
@@ -66,8 +62,8 @@ const ProductList: React.FC<ProductListProps> = ({
   return (
     <FlatList
       data={products}
-      renderItem={({ item }) => <ProductCard product={item} />}
-      keyExtractor={(item) => item._id}
+      renderItem={({item}) => <ProductCard product={item} />}
+      keyExtractor={item => item._id}
       contentContainerStyle={styles.list}
       showsVerticalScrollIndicator={false}
       onRefresh={onRefresh}

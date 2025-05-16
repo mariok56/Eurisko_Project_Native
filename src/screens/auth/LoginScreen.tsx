@@ -1,27 +1,37 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, StatusBar} from 'react-native';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  StatusBar,
+} from 'react-native';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 import AuthForm from '../../components/organisms/AuthForm';
-import { loginSchema, LoginFormData } from '../../utils/validation';
-import { RootStackParamList } from '../../types/navigation';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { getResponsiveValue } from '../../utils/responsive';
+import {loginSchema, LoginFormData} from '../../utils/validation';
+import {RootStackParamList} from '../../types/navigation';
+import {useAuth} from '../../contexts/AuthContext';
+import {useTheme} from '../../contexts/ThemeContext';
+import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
 import Header from '../../components/molecules/Header';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
-const LoginScreen: React.FC<Props> = ({ navigation }) => {
+const LoginScreen: React.FC<Props> = ({navigation}) => {
   const [loginError, setLoginError] = useState<string | null>(null);
-  const { login, isLoading } = useAuth();
-  const { colors, isDarkMode } = useTheme();
+  const {login, isLoading} = useAuth();
+  const {colors, isDarkMode} = useTheme();
 
-  const { control, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: {errors},
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -32,9 +42,14 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const onSubmit = async (data: LoginFormData) => {
     setLoginError(null);
     const success = await login(data.email, data.password);
-    
+
     if (!success) {
       setLoginError('Invalid email or password');
+    } else {
+      navigation.navigate('Verification', {
+        email: data.email,
+        password: data.password,
+      });
     }
   };
 
@@ -61,26 +76,18 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
         backgroundColor={colors.background}
         translucent={true}
       />
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+      <SafeAreaView
+        style={[styles.container, {backgroundColor: colors.background}]}
+        edges={['top']}>
         <Header title="Login" showBackButton={false} showThemeToggle={true} />
-        
+
         <View style={styles.content}>
-          <Text 
-            style={[
-              styles.title, 
-              { color: colors.text },
-              fontVariants.heading1
-            ]}
-          >
+          <Text
+            style={[styles.title, {color: colors.text}, fontVariants.heading1]}>
             Welcome Back
           </Text>
-          <Text 
-            style={[
-              styles.subtitle, 
-              { color: colors.text },
-              fontVariants.body
-            ]}
-          >
+          <Text
+            style={[styles.subtitle, {color: colors.text}, fontVariants.body]}>
             Sign in to continue
           </Text>
 
@@ -95,23 +102,21 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           />
 
           <View style={styles.footerContainer}>
-            <Text 
+            <Text
               style={[
-                styles.footerText, 
-                { color: colors.text },
-                fontVariants.body
-              ]}
-            >
-              Don't have an account? 
+                styles.footerText,
+                {color: colors.text},
+                fontVariants.body,
+              ]}>
+              Don't have an account?
             </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text 
+              <Text
                 style={[
-                  styles.linkText, 
-                  { color: colors.primary },
-                  fontVariants.bodyBold
-                ]}
-              >
+                  styles.linkText,
+                  {color: colors.primary},
+                  fontVariants.bodyBold,
+                ]}>
                 Sign up
               </Text>
             </TouchableOpacity>
@@ -145,8 +150,7 @@ const styles = StyleSheet.create({
   footerText: {
     marginRight: getResponsiveValue(4),
   },
-  linkText: {
-  },
+  linkText: {},
 });
 
 export default LoginScreen;

@@ -1,30 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, StatusBar } from 'react-native';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, StatusBar} from 'react-native';
+import {useForm} from 'react-hook-form';
+import {zodResolver} from '@hookform/resolvers/zod';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 import OtpInput from '../../components/atoms/OtpInput';
 import Button from '../../components/atoms/Button';
 import Header from '../../components/molecules/Header';
-import { VerificationFormData, verificationSchema } from '../../utils/validation';
-import { RootStackParamList } from '../../types/navigation';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext';
-import { getResponsiveValue } from '../../utils/responsive';
+import {VerificationFormData, verificationSchema} from '../../utils/validation';
+import {RootStackParamList} from '../../types/navigation';
+import {useAuth} from '../../contexts/AuthContext';
+import {useTheme} from '../../contexts/ThemeContext';
+import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Verification'>;
 
-const VerificationScreen: React.FC<Props> = ({ route }) => {
-  const { email } = route.params;
-  const { verify, login, isLoading } = useAuth();
-  const [verificationError, setVerificationError] = useState<string | null>(null);
+const VerificationScreen: React.FC<Props> = ({route}) => {
+  const {email} = route.params;
+  const {verify, isLoading} = useAuth();
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  );
   const [timer, setTimer] = useState<number>(60);
-  const { colors, isDarkMode } = useTheme();
+  const {colors, isDarkMode} = useTheme();
 
-  const { control, handleSubmit, formState: { errors } } = useForm<VerificationFormData>({
+  const {
+    control,
+    handleSubmit,
+    formState: {errors},
+  } = useForm<VerificationFormData>({
     resolver: zodResolver(verificationSchema),
     defaultValues: {
       code: '',
@@ -34,7 +40,7 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
-        setTimer((prevTimer) => prevTimer - 1);
+        setTimer(prevTimer => prevTimer - 1);
       }, 1000);
       return () => clearInterval(interval);
     }
@@ -43,11 +49,8 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
   const onSubmit = async (data: VerificationFormData) => {
     setVerificationError(null);
     const success = await verify(data.code);
-    
-    if (success) {
-      // Use hardcoded credentials
-      await login('eurisko@gmail.com', 'academy2025');
-    } else {
+
+    if (!success) {
       setVerificationError('Invalid verification code');
     }
   };
@@ -69,38 +72,29 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
         backgroundColor={colors.background}
         translucent={true}
       />
-      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
-        <Header title="Verification" showBackButton />     
+      <SafeAreaView
+        style={[styles.container, {backgroundColor: colors.background}]}
+        edges={['top']}>
+        <Header title="Verification" showBackButton />
         <View style={styles.content}>
-          <Text 
-            style={[
-              styles.title, 
-              { color: colors.text },
-              fontVariants.heading1
-            ]}
-          >
+          <Text
+            style={[styles.title, {color: colors.text}, fontVariants.heading1]}>
             Verify Your Account
           </Text>
-          <Text 
-            style={[
-              styles.subtitle, 
-              { color: colors.text },
-              fontVariants.body
-            ]}
-          >
+          <Text
+            style={[styles.subtitle, {color: colors.text}, fontVariants.body]}>
             Enter the 4-digit code sent to {email}
           </Text>
 
           {verificationError && (
-            <Text 
+            <Text
               style={[
-                styles.messageText, 
-                verificationError.includes('Invalid') 
-                  ? { color: colors.error }
-                  : { color: colors.success },
-                fontVariants.bodyBold
-              ]}
-            >
+                styles.messageText,
+                verificationError.includes('Invalid')
+                  ? {color: colors.error}
+                  : {color: colors.success},
+                fontVariants.bodyBold,
+              ]}>
               {verificationError}
             </Text>
           )}
@@ -118,33 +112,30 @@ const VerificationScreen: React.FC<Props> = ({ route }) => {
           />
 
           <View style={styles.resendContainer}>
-            <Text 
+            <Text
               style={[
-                styles.resendText, 
-                { color: colors.text },
-                fontVariants.body
-              ]}
-            >
+                styles.resendText,
+                {color: colors.text},
+                fontVariants.body,
+              ]}>
               Didn't receive a code?{' '}
               {timer > 0 ? (
-                <Text 
+                <Text
                   style={[
-                    styles.timerText, 
-                    { color: colors.border },
-                    fontVariants.body
-                  ]}
-                >
+                    styles.timerText,
+                    {color: colors.border},
+                    fontVariants.body,
+                  ]}>
                   Resend in {timer}s
                 </Text>
               ) : (
-                <Text 
+                <Text
                   style={[
-                    styles.resendLinkText, 
-                    { color: colors.primary },
-                    fontVariants.bodyBold
+                    styles.resendLinkText,
+                    {color: colors.primary},
+                    fontVariants.bodyBold,
                   ]}
-                  onPress={resendCode}
-                >
+                  onPress={resendCode}>
                   Resend
                 </Text>
               )}
@@ -181,12 +172,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: getResponsiveValue(24),
   },
-  resendText: {
-  },
-  timerText: {
-  },
-  resendLinkText: {
-  },
+  resendText: {},
+  timerText: {},
+  resendLinkText: {},
 });
 
 export default VerificationScreen;

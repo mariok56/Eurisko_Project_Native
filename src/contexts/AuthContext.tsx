@@ -1,16 +1,21 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { AuthState, User } from '../types/auth';
+import React, {createContext, useContext, useState, ReactNode} from 'react';
+import {AuthState, User} from '../types/auth';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
-  register: (name: string, email: string, password: string, phoneNumber: string) => Promise<boolean>;
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    phoneNumber: string,
+  ) => Promise<boolean>;
   verify: (code: string) => Promise<boolean>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{children: ReactNode}> = ({children}) => {
   const [state, setState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
@@ -18,8 +23,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    setState({ ...state, isLoading: true });
-    
+    setState({...state, isLoading: true});
+
     // Simple mock login
     // In a real app, this would be an API call
     try {
@@ -30,18 +35,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           email,
           phoneNumber: '1234567890',
         };
-        
+
         setState({
           user,
-          isAuthenticated: true,
+          isAuthenticated: false, // Don't set to true yet, wait for verification
           isLoading: false,
         });
         return true;
       }
-      setState({ ...state, isLoading: false });
+      setState({...state, isLoading: false});
       return false;
     } catch (error) {
-      setState({ ...state, isLoading: false });
+      setState({...state, isLoading: false});
       return false;
     }
   };
@@ -50,38 +55,42 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     _name: string,
     _email: string,
     _password: string,
-    _phoneNumber: string
+    _phoneNumber: string,
   ): Promise<boolean> => {
-    setState({ ...state, isLoading: true });
-    
+    setState({...state, isLoading: true});
+
     // Mock registration
     // In a real app, this would be an API call
     try {
       // Simulate delay
       setTimeout(() => {
-        setState({ ...state, isLoading: false });
+        setState({...state, isLoading: false});
       }, 1000);
       return true;
     } catch (error) {
-      setState({ ...state, isLoading: false });
+      setState({...state, isLoading: false});
       return false;
     }
   };
 
   const verify = async (code: string): Promise<boolean> => {
-    setState({ ...state, isLoading: true });
-    
+    setState({...state, isLoading: true});
+
     // Mock verification
     // In a real app, this would verify the OTP with an API
     try {
       if (code === '1234') {
-        setState({ ...state, isLoading: false });
+        setState({
+          ...state,
+          isAuthenticated: true, // Set to true after successful verification
+          isLoading: false,
+        });
         return true;
       }
-      setState({ ...state, isLoading: false });
+      setState({...state, isLoading: false});
       return false;
     } catch (error) {
-      setState({ ...state, isLoading: false });
+      setState({...state, isLoading: false});
       return false;
     }
   };
@@ -102,8 +111,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         register,
         verify,
         logout,
-      }}
-    >
+      }}>
       {children}
     </AuthContext.Provider>
   );
