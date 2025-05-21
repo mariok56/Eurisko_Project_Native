@@ -28,6 +28,7 @@ import fontVariants from '../../utils/fonts';
 import {profileEditSchema} from '../../utils/validation';
 import {useUserProfile, useUpdateProfile} from '../../hooks/useAuth';
 import {ImageFile} from '../../types/auth';
+import {requestCameraPermission} from '../../utils/imagePermissions';
 
 interface ProfileEditForm {
   firstName: string;
@@ -40,7 +41,6 @@ const ProfileEditScreen: React.FC = () => {
   const [profileImage, setProfileImage] = useState<ImageFile | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Get current user profile
   const {
     data: user,
     isLoading: profileLoading,
@@ -48,7 +48,6 @@ const ProfileEditScreen: React.FC = () => {
     refetch,
   } = useUserProfile();
 
-  // Update profile mutation
   const updateProfileMutation = useUpdateProfile();
 
   const {
@@ -64,7 +63,6 @@ const ProfileEditScreen: React.FC = () => {
     },
   });
 
-  // Set form values when user data is loaded
   useEffect(() => {
     if (user) {
       reset({
@@ -72,7 +70,6 @@ const ProfileEditScreen: React.FC = () => {
         lastName: user.lastName || '',
       });
 
-      // Set initial image preview if user has a profile image
       if (user.profileImage?.url) {
         setImagePreview(
           `https://backend-practice.eurisko.me${user.profileImage.url}`,
@@ -93,6 +90,12 @@ const ProfileEditScreen: React.FC = () => {
   };
 
   const takePhotoWithCamera = async () => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      Alert.alert('Permission Denied', 'Camera access is required.');
+      return;
+    }
+
     const result = await launchCamera({
       mediaType: 'photo',
       quality: 0.8,
@@ -112,7 +115,6 @@ const ProfileEditScreen: React.FC = () => {
     } else if (response.assets && response.assets[0]) {
       const selectedImage = response.assets[0];
 
-      // Set image for form submission
       setProfileImage({
         uri: selectedImage.uri || '',
         type: selectedImage.type || 'image/jpeg',
@@ -120,7 +122,6 @@ const ProfileEditScreen: React.FC = () => {
         fileSize: selectedImage.fileSize,
       });
 
-      // Set preview
       if (selectedImage.uri) {
         setImagePreview(selectedImage.uri);
       }
@@ -132,18 +133,9 @@ const ProfileEditScreen: React.FC = () => {
       'Change Profile Photo',
       'Choose how you want to add a profile photo',
       [
-        {
-          text: 'Take Photo',
-          onPress: takePhotoWithCamera,
-        },
-        {
-          text: 'Choose from Gallery',
-          onPress: selectImageFromGallery,
-        },
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
+        {text: 'Take Photo', onPress: takePhotoWithCamera},
+        {text: 'Choose from Gallery', onPress: selectImageFromGallery},
+        {text: 'Cancel', style: 'cancel'},
       ],
     );
   };
@@ -156,7 +148,6 @@ const ProfileEditScreen: React.FC = () => {
         profileImage: profileImage || undefined,
       });
 
-      // Refresh user profile data
       await refetch();
 
       Alert.alert('Success', 'Profile updated successfully', [
@@ -346,7 +337,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     paddingHorizontal: getResponsiveValue(12),
     paddingVertical: getResponsiveValue(6),
     borderRadius: getResponsiveValue(20),

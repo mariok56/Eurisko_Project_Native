@@ -14,6 +14,7 @@ import {zodResolver} from '@hookform/resolvers/zod';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
+import {requestCameraPermission} from '../../utils/imagePermissions';
 
 import AuthForm from '../../components/organisms/AuthForm';
 import Header from '../../components/molecules/Header';
@@ -74,6 +75,11 @@ const RegisterScreen: React.FC<Props> = ({navigation}) => {
 
   // Function to take photo with camera
   const takePhotoWithCamera = async () => {
+    const hasPermission = await requestCameraPermission();
+    if (!hasPermission) {
+      return;
+    }
+
     const result = await launchCamera({
       mediaType: 'photo',
       quality: 0.8,
