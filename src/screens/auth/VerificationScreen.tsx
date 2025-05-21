@@ -1,5 +1,5 @@
-import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, StatusBar} from 'react-native';
+import React, {useState, useEffect, useRef} from 'react';
+import {View, Text, StyleSheet, StatusBar, Alert} from 'react-native';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -10,21 +10,33 @@ import Button from '../../components/atoms/Button';
 import Header from '../../components/molecules/Header';
 import {VerificationFormData, verificationSchema} from '../../utils/validation';
 import {RootStackParamList} from '../../types/navigation';
-import {useAuth} from '../../contexts/AuthContext';
 import {useTheme} from '../../contexts/ThemeContext';
 import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
+import {useVerifyOtp, useResendOtp, useLogin} from '../../hooks/useAuth';
+import {useAuthStore} from '../../store/authStore';
+import {useQueryClient} from '@tanstack/react-query';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Verification'>;
 
-const VerificationScreen: React.FC<Props> = ({route}) => {
-  const {email} = route.params;
-  const {verify, isLoading} = useAuth();
-  const [verificationError, setVerificationError] = useState<string | null>(
+const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
+  const {email, password} = route.params;
+  const [timer, setTimer] = useState<number>(60);
+  const [verificationMessage, setVerificationMessage] = useState<string | null>(
     null,
   );
-  const [timer, setTimer] = useState<number>(60);
+  const [messageType, setMessageType] = useState<'success' | 'error'>('error');
   const {colors, isDarkMode} = useTheme();
+  const {setAuthenticated} = useAuthStore();
+  const queryClient = useQueryClient();
+
+  // Add this ref to track if we've already sent the initial OTP request
+  const initialOtpRequestSent = useRef(false);
+
+  // React Query mutations
+  const verifyOtpMutation = useVerifyOtp();
+  const resendOtpMutation = useResendOtp();
+  const loginMutation = useLogin();
 
   const {
     control,
@@ -37,6 +49,41 @@ const VerificationScreen: React.FC<Props> = ({route}) => {
     },
   });
 
+  // Automatically request a new OTP when component mounts - FIXED VERSION WITH PROPER DEPENDENCIES
+  useEffect(() => {
+    // Only send OTP once when component mounts
+    const autoResendOtp = async () => {
+      // Check if we've already sent the initial request to prevent duplicates
+      if (initialOtpRequestSent.current) {
+        return;
+      }
+
+      // Mark that we've sent the request
+      initialOtpRequestSent.current = true;
+
+      try {
+        setVerificationMessage('Sending verification code...');
+        await resendOtpMutation.mutateAsync(email);
+        setMessageType('success');
+        setVerificationMessage(
+          'A verification code has been sent to your email',
+        );
+        setTimer(60); // Reset timer
+      } catch (error: any) {
+        setMessageType('error');
+
+        // Error handling is now user-friendly from the hook
+        setVerificationMessage(
+          error.message || 'Failed to send verification code',
+        );
+      }
+    };
+
+    autoResendOtp();
+
+    // Include the dependencies but still use the ref check to prevent multiple calls
+  }, [email, resendOtpMutation, setMessageType, setTimer]);
+
   useEffect(() => {
     if (timer > 0) {
       const interval = setInterval(() => {
@@ -47,22 +94,81 @@ const VerificationScreen: React.FC<Props> = ({route}) => {
   }, [timer]);
 
   const onSubmit = async (data: VerificationFormData) => {
-    setVerificationError(null);
-    const success = await verify(data.code);
+    setVerificationMessage(null);
 
-    if (!success) {
-      setVerificationError('Invalid verification code');
+    try {
+      // Ensure OTP is properly formatted
+      const formattedOtp = data.code.toString().trim();
+      console.log('Submitting verification with OTP:', formattedOtp);
+
+      // Verify OTP
+      await verifyOtpMutation.mutateAsync({email, otp: formattedOtp});
+
+      // OTP verification successful, now try to login
+      if (password) {
+        try {
+          await loginMutation.mutateAsync({
+            email,
+            password,
+            token_expires_in: '1y',
+          });
+
+          // Login successful
+          setAuthenticated(true);
+
+          // Invalidate user profile query to fetch fresh data
+          queryClient.invalidateQueries({queryKey: ['user-profile']});
+
+          // Show success message
+          Alert.alert(
+            'Success',
+            'Your email has been verified and you are now logged in!',
+            [{text: 'OK'}],
+          );
+        } catch (error: any) {
+          setMessageType('error');
+          setVerificationMessage(
+            error.message || 'Login failed after verification',
+          );
+        }
+      } else {
+        // Handle case where password might not be available
+        setMessageType('success');
+        setVerificationMessage('Verification successful! Please log in.');
+
+        // Redirect to login
+        setTimeout(() => {
+          navigation.navigate('Login');
+        }, 1500);
+      }
+    } catch (error: any) {
+      setMessageType('error');
+      setVerificationMessage(error.message || 'Verification failed');
     }
   };
 
-  const resendCode = () => {
-    // In a real app, this would make an API call to resend the code
-    setTimer(60);
-    // Show a success message
-    setVerificationError('A new code has been sent');
-    setTimeout(() => {
-      setVerificationError(null);
-    }, 3000);
+  // Updated to prevent rapid multiple clicks
+  const handleResendCode = async () => {
+    // Prevent multiple rapid clicks or resending while request is in progress
+    if (resendOtpMutation.isPending || timer > 0) {
+      return;
+    }
+
+    setVerificationMessage(null);
+
+    try {
+      await resendOtpMutation.mutateAsync(email);
+
+      // Resend successful
+      setTimer(60);
+      setMessageType('success');
+      setVerificationMessage('A new code has been sent to your email');
+    } catch (error: any) {
+      setMessageType('error');
+      setVerificationMessage(
+        error.message || 'Failed to resend verification code',
+      );
+    }
   };
 
   return (
@@ -83,19 +189,20 @@ const VerificationScreen: React.FC<Props> = ({route}) => {
           </Text>
           <Text
             style={[styles.subtitle, {color: colors.text}, fontVariants.body]}>
-            Enter the 4-digit code sent to {email}
+            Enter the 6-digit code sent to {email}
           </Text>
 
-          {verificationError && (
+          {verificationMessage && (
             <Text
               style={[
                 styles.messageText,
-                verificationError.includes('Invalid')
-                  ? {color: colors.error}
-                  : {color: colors.success},
+                {
+                  color:
+                    messageType === 'error' ? colors.error : colors.success,
+                },
                 fontVariants.bodyBold,
               ]}>
-              {verificationError}
+              {verificationMessage}
             </Text>
           )}
 
@@ -103,12 +210,18 @@ const VerificationScreen: React.FC<Props> = ({route}) => {
             name="code"
             control={control}
             error={errors.code?.message}
+            onComplete={code => {
+              // Auto-submit when all digits are entered
+              if (code.length === 6) {
+                handleSubmit(onSubmit)();
+              }
+            }}
           />
 
           <Button
             title="Verify"
             onPress={handleSubmit(onSubmit)}
-            loading={isLoading}
+            loading={verifyOtpMutation.isPending || loginMutation.isPending}
           />
 
           <View style={styles.resendContainer}>
@@ -135,7 +248,7 @@ const VerificationScreen: React.FC<Props> = ({route}) => {
                     {color: colors.primary},
                     fontVariants.bodyBold,
                   ]}
-                  onPress={resendCode}>
+                  onPress={handleResendCode}>
                   Resend
                 </Text>
               )}

@@ -1,14 +1,8 @@
-import React, { useRef, useState, createRef } from 'react';
-import {
-  View,
-  TextInput,
-  StyleSheet,
-  Text,
-  Keyboard,
-} from 'react-native';
-import { Control, Controller } from 'react-hook-form';
-import { useTheme } from '../../contexts/ThemeContext';
-import { getResponsiveValue } from '../../utils/responsive';
+import React, {useRef, useState, createRef} from 'react';
+import {View, TextInput, StyleSheet, Text, Keyboard} from 'react-native';
+import {Control, Controller} from 'react-hook-form';
+import {useTheme} from '../../contexts/ThemeContext';
+import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
 
 interface OtpInputProps {
@@ -24,12 +18,16 @@ const OtpInput: React.FC<OtpInputProps> = ({
   error,
   onComplete,
 }) => {
-  const { colors } = useTheme();
+  const {colors} = useTheme();
+  // Updated to 6 input refs instead of 4
   const inputRefs = useRef<Array<React.RefObject<TextInput | null>>>(
-    Array(4).fill(null).map(() => createRef<TextInput>())
+    Array(6)
+      .fill(null)
+      .map(() => createRef<TextInput>()),
   );
 
-  const [otp, setOtp] = useState<string[]>(['', '', '', '']);
+  // Updated to 6 empty strings instead of 4
+  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
 
   const handleKeyPress = (e: any, index: number) => {
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
@@ -42,54 +40,57 @@ const OtpInput: React.FC<OtpInputProps> = ({
       <Controller
         control={control}
         name={name}
-        render={({ field: { onChange } }) => (
+        render={({field: {onChange}}) => (
           <View>
             <View style={styles.inputContainer}>
-              {[0, 1, 2, 3].map((index) => (
+              {/* Updated to render 6 inputs instead of 4 */}
+              {[0, 1, 2, 3, 4, 5].map(index => (
                 <TextInput
                   key={index}
                   ref={inputRefs.current[index]}
                   style={[
-                    styles.input, 
-                    { 
+                    styles.input,
+                    {
                       borderColor: error ? colors.error : colors.border,
                       backgroundColor: colors.card,
-                      color: colors.text
-                    }
+                      color: colors.text,
+                    },
                   ]}
                   maxLength={1}
                   keyboardType="number-pad"
-                  onChangeText={(text) => {
+                  onChangeText={text => {
                     const newOtp = [...otp];
                     newOtp[index] = text;
                     setOtp(newOtp);
                     onChange(newOtp.join(''));
 
-                    if (text && index < 3) {
+                    if (text && index < 5) {
+                      // Updated to check index < 5
                       inputRefs.current[index + 1]?.current?.focus();
                     }
 
-                    if (index === 3 && text) {
+                    if (index === 5 && text) {
+                      // Updated to check index === 5
                       const completeOtp = newOtp.join('');
-                      if (completeOtp.length === 4) {
+                      if (completeOtp.length === 6) {
+                        // Updated to check length === 6
                         Keyboard.dismiss();
                         onComplete?.(completeOtp);
                       }
                     }
                   }}
-                  onKeyPress={(e) => handleKeyPress(e, index)}
+                  onKeyPress={e => handleKeyPress(e, index)}
                   value={otp[index]}
                 />
               ))}
             </View>
             {error && (
-              <Text 
+              <Text
                 style={[
-                  styles.errorText, 
-                  { color: colors.error },
-                  fontVariants.caption
-                ]}
-              >
+                  styles.errorText,
+                  {color: colors.error},
+                  fontVariants.caption,
+                ]}>
                 {error}
               </Text>
             )}
@@ -111,12 +112,12 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   input: {
-    width: getResponsiveValue(60),
-    height: getResponsiveValue(60),
+    width: getResponsiveValue(45),
+    height: getResponsiveValue(55),
     borderWidth: 1,
     borderRadius: getResponsiveValue(8),
     textAlign: 'center',
-    fontSize: getResponsiveValue(24),
+    fontSize: getResponsiveValue(20),
     fontWeight: '600',
   },
   errorText: {

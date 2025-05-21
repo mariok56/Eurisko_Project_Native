@@ -32,7 +32,7 @@
 		<true/>
 	</dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string/>
+	<string></string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
@@ -51,5 +51,13 @@
 	<array>
 		<string>Inter-Regular.ttf</string>
 	</array>
+	<!-- Added permissions for camera and photo library -->
+	<key>NSCameraUsageDescription</key>
+	<string>We need access to your camera to take profile photos</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need access to your photo library to select profile photos</string>
+	<!-- For keychain secure storage with biometrics (optional) -->
+	<key>NSFaceIDUsageDescription</key>
+	<string>We use Face ID to secure your account data</string>
 </dict>
 </plist>

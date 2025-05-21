@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -6,26 +6,31 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
+  Image,
+  Alert,
 } from 'react-native';
 import {useForm} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
 
 import AuthForm from '../../components/organisms/AuthForm';
 import Header from '../../components/molecules/Header';
 import {RegisterFormData, registerSchema} from '../../utils/validation';
 import {RootStackParamList} from '../../types/navigation';
-import {useAuth} from '../../contexts/AuthContext';
 import {useTheme} from '../../contexts/ThemeContext';
 import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
+import {useSignup} from '../../hooks/useAuth';
+import {ImageFile} from '../../types/auth';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
 
 const RegisterScreen: React.FC<Props> = ({navigation}) => {
-  const {register, isLoading} = useAuth();
   const {colors, isDarkMode} = useTheme();
+  const signupMutation = useSignup();
+  const [profileImage, setProfileImage] = useState<ImageFile | null>(null);
 
   const {
     control,
@@ -34,34 +39,117 @@ const RegisterScreen: React.FC<Props> = ({navigation}) => {
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: '',
+      firstName: '',
+      lastName: '',
       email: '',
       password: '',
       phoneNumber: '',
     },
   });
 
-  const onSubmit = async (data: RegisterFormData) => {
-    const success = await register(
-      data.name,
-      data.email,
-      data.password,
-      data.phoneNumber,
-    );
+  // Function to select image from gallery
+  const selectImageFromGallery = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      quality: 0.8,
+      maxWidth: 500,
+      maxHeight: 500,
+    });
 
-    if (success) {
+    if (result.didCancel) {
+      console.log('User cancelled image picker');
+    } else if (result.errorCode) {
+      console.log('ImagePicker Error: ', result.errorMessage);
+      Alert.alert('Error', 'Failed to pick image');
+    } else if (result.assets && result.assets[0]) {
+      const selectedImage = result.assets[0];
+      setProfileImage({
+        uri: selectedImage.uri || '',
+        type: selectedImage.type || 'image/jpeg',
+        fileName: selectedImage.fileName || 'profile.jpg',
+        fileSize: selectedImage.fileSize,
+      });
+    }
+  };
+
+  // Function to take photo with camera
+  const takePhotoWithCamera = async () => {
+    const result = await launchCamera({
+      mediaType: 'photo',
+      quality: 0.8,
+      maxWidth: 500,
+      maxHeight: 500,
+    });
+
+    if (result.didCancel) {
+      console.log('User cancelled camera');
+    } else if (result.errorCode) {
+      console.log('Camera Error: ', result.errorMessage);
+      Alert.alert('Error', 'Failed to take photo');
+    } else if (result.assets && result.assets[0]) {
+      const selectedImage = result.assets[0];
+      setProfileImage({
+        uri: selectedImage.uri || '',
+        type: selectedImage.type || 'image/jpeg',
+        fileName: selectedImage.fileName || 'profile.jpg',
+        fileSize: selectedImage.fileSize,
+      });
+    }
+  };
+
+  // Show image picker options
+  const showImagePickerOptions = () => {
+    Alert.alert(
+      'Select Profile Photo',
+      'Choose how you want to add a profile photo',
+      [
+        {
+          text: 'Take Photo',
+          onPress: takePhotoWithCamera,
+        },
+        {
+          text: 'Choose from Gallery',
+          onPress: selectImageFromGallery,
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ],
+    );
+  };
+
+  const onSubmit = async (data: RegisterFormData) => {
+    try {
+      await signupMutation.mutateAsync({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        password: data.password,
+        profileImage: profileImage || undefined,
+      });
+
+      // If successful, navigate to verification screen
       navigation.navigate('Verification', {
         email: data.email,
         password: data.password,
       });
+    } catch (error) {
+      // Error is handled by the mutation
+      console.error('Registration error:', error);
     }
   };
 
   const formFields = [
     {
-      name: 'name',
-      label: 'Full Name',
-      placeholder: 'Enter your full name',
+      name: 'firstName',
+      label: 'First Name',
+      placeholder: 'Enter your first name',
+    },
+    {
+      name: 'lastName',
+      label: 'Last Name',
+      placeholder: 'Enter your last name',
     },
     {
       name: 'email',
@@ -115,13 +203,56 @@ const RegisterScreen: React.FC<Props> = ({navigation}) => {
               Sign up to get started
             </Text>
 
+            {/* Profile Image Selection */}
+            <View style={styles.imageContainer}>
+              <TouchableOpacity
+                onPress={showImagePickerOptions}
+                style={[
+                  styles.imagePickerButton,
+                  {
+                    backgroundColor: colors.card,
+                    borderColor: colors.border,
+                  },
+                ]}>
+                {profileImage ? (
+                  <Image
+                    source={{uri: profileImage.uri}}
+                    style={styles.profileImage}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.imagePlaceholder,
+                      {backgroundColor: colors.border},
+                    ]}>
+                    <Text
+                      style={[
+                        styles.imagePlaceholderText,
+                        {color: colors.text},
+                      ]}>
+                      Add Photo
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+              <Text
+                style={[
+                  styles.imagePickerText,
+                  {color: colors.text},
+                  fontVariants.body,
+                ]}>
+                Profile Picture (Optional)
+              </Text>
+            </View>
+
             <AuthForm
               fields={formFields}
               control={control}
               errors={errors}
               onSubmit={handleSubmit(onSubmit)}
               submitButtonText="Register"
-              isLoading={isLoading}
+              isLoading={signupMutation.isPending}
+              errorMessage={signupMutation.error?.message ?? null}
             />
 
             <View style={styles.footerContainer}>
@@ -168,7 +299,37 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveValue(8),
   },
   subtitle: {
-    marginBottom: getResponsiveValue(32),
+    marginBottom: getResponsiveValue(16),
+  },
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: getResponsiveValue(24),
+  },
+  imagePickerButton: {
+    width: getResponsiveValue(120),
+    height: getResponsiveValue(120),
+    borderRadius: getResponsiveValue(60),
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    marginBottom: getResponsiveValue(8),
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    fontSize: getResponsiveValue(14),
+  },
+  imagePickerText: {
+    fontSize: getResponsiveValue(14),
   },
   footerContainer: {
     flexDirection: 'row',
