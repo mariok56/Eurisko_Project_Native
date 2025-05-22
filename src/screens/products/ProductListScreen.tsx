@@ -7,9 +7,10 @@ import {
   TouchableOpacity,
   Text,
   TextInput,
-  Alert,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useNavigation} from '@react-navigation/native';
+import {NativeStackNavigationProp} from '@react-navigation/native-stack';
 import Icon from '../../components/atoms/icons';
 
 import Header from '../../components/molecules/Header';
@@ -23,9 +24,12 @@ import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
 import {useProducts, useSearchProducts} from '../../hooks/useProducts';
 import {ProductFilter} from '../../types/product';
+import {RootStackParamList} from '../../types/navigation';
 
 const ProductListScreen: React.FC = () => {
   const {colors, isDarkMode} = useTheme();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   // State for search and filtering
   const [searchQuery, setSearchQuery] = useState('');
@@ -84,10 +88,8 @@ const ProductListScreen: React.FC = () => {
   }, [pagination?.hasNextPage, activeQuery.isFetching]);
 
   const handleAddProduct = useCallback(() => {
-    // For now, just show an alert since AddProductScreen doesn't exist yet
-    Alert.alert('Add Product', 'Add Product screen will be created next!');
-    // Later this will be: navigation.navigate('AddProduct');
-  }, []);
+    navigation.navigate('AddProduct');
+  }, [navigation]);
 
   // Memoized LoadingMore component to prevent unnecessary re-renders
   const showLoadingMore =

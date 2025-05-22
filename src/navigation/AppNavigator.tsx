@@ -11,6 +11,8 @@ import VerificationScreen from '../screens/auth/VerificationScreen';
 import ProductDetailScreen from '../screens/products/ProductDetailScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgetPasswordScreen';
 import ProfileEditScreen from '../screens/Profile/ProfileEditScreen';
+import AddProductScreen from '../screens/products/addProductScreen';
+import EditProductScreen from '../screens/products/editProductScreen';
 import TabNavigator from './TabNav';
 import {RootStackParamList} from '../types/navigation';
 import {useAuthStore} from '../store/authStore';
@@ -78,6 +80,8 @@ const AppNavigator: React.FC = () => {
                 component={ProductDetailScreen}
               />
               <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+              <Stack.Screen name="AddProduct" component={AddProductScreen} />
+              <Stack.Screen name="EditProduct" component={EditProductScreen} />
             </>
           ) : (
             <>

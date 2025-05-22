@@ -15,7 +15,7 @@ import {
 } from 'react-native';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import Icon from '../../components/atoms/icons'; // Custom icon component
+import Icon from '../../components/atoms/icons';
 
 import {RootStackParamList} from '../../types/navigation';
 import Header from '../../components/molecules/Header';
@@ -25,6 +25,10 @@ import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
 import {useProduct, useDeleteProduct} from '../../hooks/useProducts';
 import {useUserProfile} from '../../hooks/useAuth';
+import {
+  saveImageToDevice,
+  saveImageToDeviceAlternative,
+} from '../../utils/imageSave';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductDetail'>;
 
@@ -117,6 +121,33 @@ const ProductDetailScreen: React.FC<Props> = ({route, navigation}) => {
     );
   };
 
+  const handleImageLongPress = (imageUrl: string) => {
+    Alert.alert(
+      'Save Image',
+      'Do you want to save this image to your device?',
+      [
+        {text: 'Cancel', style: 'cancel'},
+        {
+          text: 'Save',
+          onPress: async () => {
+            try {
+              console.log('Saving image:', imageUrl);
+              const success = await saveImageToDevice(imageUrl);
+              if (!success) {
+                // Try alternative method if the first one fails
+                console.log('Trying alternative save method...');
+                await saveImageToDeviceAlternative(imageUrl);
+              }
+            } catch (error) {
+              console.error('Error in image save:', error);
+              Alert.alert('Error', 'Failed to save image. Please try again.');
+            }
+          },
+        },
+      ],
+    );
+  };
+
   const renderImageGallery = () => {
     if (!product?.images || product.images.length === 0) {
       return (
@@ -144,7 +175,15 @@ const ProductDetailScreen: React.FC<Props> = ({route, navigation}) => {
           }}
           scrollEventThrottle={16}>
           {product.images.map((image, index) => (
-            <View key={index} style={styles.imageWrapper}>
+            <TouchableOpacity
+              key={index}
+              style={styles.imageWrapper}
+              activeOpacity={1}
+              onLongPress={() =>
+                handleImageLongPress(
+                  `https://backend-practice.eurisko.me${image.url}`,
+                )
+              }>
               <Image
                 source={{
                   uri: `https://backend-practice.eurisko.me${image.url}`,
@@ -153,7 +192,12 @@ const ProductDetailScreen: React.FC<Props> = ({route, navigation}) => {
                 resizeMode="cover"
                 onError={() => console.log('Error loading image:', image.url)}
               />
-            </View>
+              <View style={styles.longPressHint}>
+                <Text style={[styles.hintText, {color: colors.card}]}>
+                  Long press to save
+                </Text>
+              </View>
+            </TouchableOpacity>
           ))}
         </ScrollView>
 
@@ -443,10 +487,24 @@ const styles = StyleSheet.create({
   imageWrapper: {
     width: screenWidth,
     height: getResponsiveValue(300),
+    position: 'relative',
   },
   image: {
     width: '100%',
     height: '100%',
+  },
+  longPressHint: {
+    position: 'absolute',
+    bottom: getResponsiveValue(8),
+    left: getResponsiveValue(8),
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    paddingHorizontal: getResponsiveValue(8),
+    paddingVertical: getResponsiveValue(4),
+    borderRadius: getResponsiveValue(4),
+  },
+  hintText: {
+    fontSize: getResponsiveValue(12),
+    color: 'white',
   },
   imagePlaceholder: {
     width: screenWidth,
