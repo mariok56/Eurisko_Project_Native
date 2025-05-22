@@ -17,7 +17,7 @@ import ProductList from '../../components/organisms/ProductList';
 import {
   ProductsHeaderRight,
   LoadingMoreComponent,
-} from '../../components/molecules/HeaderComponents'; // Import from external file
+} from '../../components/molecules/HeaderComponents';
 import {useTheme} from '../../contexts/ThemeContext';
 import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
@@ -93,12 +93,6 @@ const ProductListScreen: React.FC = () => {
   const showLoadingMore =
     !searchQuery_trimmed && pagination?.hasNextPage && activeQuery.isFetching;
 
-  // Create header right component - now using the imported component
-  const HeaderRightComponent = useCallback(
-    () => <ProductsHeaderRight onAddProduct={handleAddProduct} />,
-    [handleAddProduct],
-  );
-
   return (
     <>
       <StatusBar
@@ -112,7 +106,9 @@ const ProductListScreen: React.FC = () => {
           title="Products"
           showBackButton={false}
           showThemeToggle={true}
-          rightComponent={<HeaderRightComponent />}
+          rightComponent={
+            <ProductsHeaderRight onAddProduct={handleAddProduct} />
+          }
         />
 
         {/* Search and Filter Section */}
