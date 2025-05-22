@@ -5,6 +5,7 @@ import {
   View,
   ActivityIndicator,
   Text,
+  ListRenderItem,
 } from 'react-native';
 import ProductCard from '../molecules/ProductCard';
 import {Product} from '../../types/product';
@@ -18,6 +19,9 @@ interface ProductListProps {
   error?: string | null;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onEndReached?: () => void;
+  onEndReachedThreshold?: number;
+  ListFooterComponent?: React.ComponentType<any> | React.ReactElement | null;
 }
 
 const ProductList: React.FC<ProductListProps> = ({
@@ -26,48 +30,75 @@ const ProductList: React.FC<ProductListProps> = ({
   error = null,
   onRefresh,
   refreshing = false,
+  onEndReached,
+  onEndReachedThreshold,
+  ListFooterComponent,
 }) => {
   const {colors} = useTheme();
+
+  const renderProduct: ListRenderItem<Product> = ({item}) => (
+    <ProductCard product={item} />
+  );
+
+  const renderEmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Text style={[styles.emptyText, {color: colors.text}, fontVariants.body]}>
+        No products found
+      </Text>
+    </View>
+  );
+
+  const renderErrorComponent = () => (
+    <View style={styles.errorContainer}>
+      <Text
+        style={[styles.errorText, {color: colors.error}, fontVariants.body]}>
+        {error}
+      </Text>
+    </View>
+  );
 
   if (loading && !refreshing) {
     return (
       <View style={styles.loaderContainer}>
         <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.errorContainer}>
         <Text
-          style={[styles.errorText, {color: colors.error}, fontVariants.body]}>
-          {error}
+          style={[styles.loadingText, {color: colors.text}, fontVariants.body]}>
+          Loading products...
         </Text>
       </View>
     );
   }
 
-  if (products.length === 0 && !loading) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text
-          style={[styles.emptyText, {color: colors.text}, fontVariants.body]}>
-          No products found
-        </Text>
-      </View>
-    );
+  if (error && !refreshing) {
+    return renderErrorComponent();
   }
 
   return (
     <FlatList
       data={products}
-      renderItem={({item}) => <ProductCard product={item} />}
+      renderItem={renderProduct}
       keyExtractor={item => item._id}
-      contentContainerStyle={styles.list}
+      contentContainerStyle={[
+        styles.list,
+        products.length === 0 && styles.emptyList,
+      ]}
       showsVerticalScrollIndicator={false}
       onRefresh={onRefresh}
       refreshing={refreshing}
+      onEndReached={onEndReached}
+      onEndReachedThreshold={onEndReachedThreshold}
+      ListEmptyComponent={!loading && !error ? renderEmptyComponent : null}
+      ListFooterComponent={ListFooterComponent}
+      // Performance optimizations
+      removeClippedSubviews={true}
+      maxToRenderPerBatch={10}
+      windowSize={10}
+      initialNumToRender={10}
+      getItemLayout={(data, index) => ({
+        length: getResponsiveValue(220), // Approximate item height
+        offset: getResponsiveValue(220) * index,
+        index,
+      })}
     />
   );
 };
@@ -76,10 +107,17 @@ const styles = StyleSheet.create({
   list: {
     padding: getResponsiveValue(16),
   },
+  emptyList: {
+    flexGrow: 1,
+  },
   loaderContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    padding: getResponsiveValue(20),
+  },
+  loadingText: {
+    marginTop: getResponsiveValue(12),
   },
   errorContainer: {
     flex: 1,
@@ -98,6 +136,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: 'center',
+    fontSize: getResponsiveValue(16),
   },
 });
 

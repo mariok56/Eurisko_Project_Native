@@ -183,8 +183,12 @@ export const useUserProfile = () => {
 
         // Map the API response to our User type
         const user = response.data.user;
+        if (!user) {
+          throw new Error('User data not found in response');
+        }
+
         return {
-          id: user.id,
+          id: user.id, // API returns 'id' field according to the API docs
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
@@ -217,7 +221,20 @@ export const useUpdateProfile = () => {
           throw new Error(response.data.message || 'Failed to update profile');
         }
 
-        return response.data.user;
+        // Return mapped user data
+        const user = response.data.user;
+        if (!user) {
+          throw new Error('User data not found in response');
+        }
+
+        return {
+          id: user.id, // API returns 'id' field according to the API docs
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImage: user.profileImage,
+          isEmailVerified: user.isEmailVerified,
+        };
       } catch (error) {
         // Convert technical error to user-friendly message
         const userFriendlyMessage = getUserFriendlyErrorMessage(error);

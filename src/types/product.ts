@@ -10,7 +10,7 @@ export interface Location {
 }
 
 export interface ProductUser {
-  id: string;
+  _id: string;
   username?: string;
   email: string;
   firstName?: string;

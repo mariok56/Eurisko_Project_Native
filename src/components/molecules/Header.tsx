@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useTheme } from '../../contexts/ThemeContext';
-import { getResponsiveValue } from '../../utils/responsive';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
+import {useTheme} from '../../contexts/ThemeContext';
+import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
 import ThemeToggle from '../atoms/ThemeToggle';
 
@@ -20,49 +20,40 @@ const Header: React.FC<HeaderProps> = ({
   rightComponent,
 }) => {
   const navigation = useNavigation();
-  const { colors } = useTheme();
+  const {colors} = useTheme();
 
   return (
-    <View 
+    <View
       style={[
-        styles.container, 
-        { 
+        styles.container,
+        {
           backgroundColor: colors.card,
-          borderBottomColor: colors.border 
-        }
-      ]}
-    >
+          borderBottomColor: colors.border,
+        },
+      ]}>
       <View style={styles.leftContainer}>
         {showBackButton && (
-          <TouchableOpacity 
-            onPress={() => navigation.goBack()} 
+          <TouchableOpacity
+            onPress={() => navigation.goBack()}
             style={styles.backButton}
-            hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }}
-          >
-            <Text style={[styles.backText, { color: colors.primary }]}>←</Text>
+            hitSlop={{top: 15, bottom: 15, left: 15, right: 15}}>
+            <Text style={[styles.backText, {color: colors.primary}]}>←</Text>
           </TouchableOpacity>
         )}
       </View>
-      
+
       <View style={styles.titleContainer}>
-        <Text 
-          style={[
-            styles.title, 
-            { color: colors.text },
-            fontVariants.heading3
-          ]}
-          numberOfLines={1}
-        >
+        <Text
+          style={[styles.title, {color: colors.text}, fontVariants.heading3]}
+          numberOfLines={1}>
           {title}
         </Text>
       </View>
-      
+
       <View style={styles.rightContainer}>
-        {rightComponent ? (
-          rightComponent
-        ) : (
-          showThemeToggle && <ThemeToggle size="small" />
-        )}
+        {rightComponent
+          ? rightComponent
+          : showThemeToggle && <ThemeToggle size="small" />}
       </View>
     </View>
   );
@@ -76,7 +67,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: getResponsiveValue(16),
     borderBottomWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 3,
