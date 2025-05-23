@@ -18,6 +18,7 @@ interface AuthResponse {
         url: string;
       };
       isEmailVerified: boolean;
+      createdAt?: string;
     };
   };
 }

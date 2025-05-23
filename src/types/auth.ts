@@ -7,6 +7,7 @@ export interface User {
     url: string;
   };
   isEmailVerified: boolean;
+  createdAt?: string;
 }
 
 export interface Post {
