@@ -8,85 +8,131 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  StatusBar,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useForm, Controller} from 'react-hook-form';
 import {zodResolver} from '@hookform/resolvers/zod';
-import {useNavigation} from '@react-navigation/native';
-import {
-  launchImageLibrary,
-  launchCamera,
-  ImagePickerResponse,
-} from 'react-native-image-picker';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {launchImageLibrary, launchCamera} from 'react-native-image-picker';
+import {z} from 'zod';
 
 import Header from '../../components/molecules/Header';
 import Button from '../../components/atoms/Button';
 import Input from '../../components/atoms/Input';
+import Icon from '../../components/atoms/icons';
+import LocationPickerModal from '../../components/molecules/LocationPickerModal';
 import {useTheme} from '../../contexts/ThemeContext';
 import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
-import {profileEditSchema} from '../../utils/validation';
-import {useUserProfile, useUpdateProfile} from '../../hooks/useAuth';
+import {productSchema, ProductFormData} from '../../utils/validation';
+import {useProduct, useUpdateProduct} from '../../hooks/useProducts';
 import {ImageFile} from '../../types/auth';
 import {requestCameraPermission} from '../../utils/imagePermissions';
+import {RootStackParamList} from '../../types/navigation';
 
-interface ProfileEditForm {
-  firstName: string;
-  lastName: string;
+interface LocationData {
+  name: string;
+  longitude: number;
+  latitude: number;
 }
 
-const ProfileEditScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const {colors} = useTheme();
-  const [profileImage, setProfileImage] = useState<ImageFile | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+interface ExtendedProductForm extends ProductFormData {
+  locationName: string;
+}
 
+const extendedProductSchema = productSchema.extend({
+  locationName: z
+    .string()
+    .min(3, 'Location name must be at least 3 characters'),
+});
+
+type Props = NativeStackScreenProps<RootStackParamList, 'EditProduct'>;
+
+const EditProductScreen: React.FC<Props> = ({route, navigation}) => {
+  const {productId} = route.params;
+  const {colors, isDarkMode} = useTheme();
+  const [images, setImages] = useState<ImageFile[]>([]);
+  const [location, setLocation] = useState<LocationData | null>(null);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+
+  // API hooks
   const {
-    data: user,
-    isLoading: profileLoading,
-    isError: profileError,
-    refetch,
-  } = useUserProfile();
+    data: productData,
+    isLoading: productLoading,
+    error: productError,
+  } = useProduct(productId);
+  const updateProductMutation = useUpdateProduct();
 
-  const updateProfileMutation = useUpdateProfile();
+  const product = productData?.product;
 
   const {
     control,
     handleSubmit,
+    setValue,
     reset,
     formState: {errors},
-  } = useForm<ProfileEditForm>({
-    resolver: zodResolver(profileEditSchema),
+  } = useForm<ExtendedProductForm>({
+    resolver: zodResolver(extendedProductSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
+      title: '',
+      description: '',
+      price: 0,
+      locationName: '',
     },
   });
 
+  // Initialize form with existing product data
   useEffect(() => {
-    if (user) {
+    if (product) {
       reset({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
+        title: product.title,
+        description: product.description,
+        price: product.price,
+        locationName: product.location?.name || '',
       });
 
-      if (user.profileImage?.url) {
-        setImagePreview(
-          `https://backend-practice.eurisko.me${user.profileImage.url}`,
+      if (product.location) {
+        setLocation({
+          name: product.location.name,
+          latitude: product.location.latitude,
+          longitude: product.location.longitude,
+        });
+      }
+
+      // Convert existing images to ImageFile format for display
+      if (product.images) {
+        const existingImages: ImageFile[] = product.images.map(
+          (image, index) => ({
+            uri: `https://backend-practice.eurisko.me${image.url}`,
+            type: 'image/jpeg',
+            fileName: `existing_image_${index}.jpg`,
+            isExisting: true, // Flag to identify existing images
+          }),
         );
+        setImages(existingImages);
       }
     }
-  }, [user, reset]);
+  }, [product, reset]);
 
-  const selectImageFromGallery = async () => {
+  const selectImagesFromGallery = async () => {
     const result = await launchImageLibrary({
       mediaType: 'photo',
       quality: 0.8,
-      maxWidth: 500,
-      maxHeight: 500,
+      maxWidth: 800,
+      maxHeight: 800,
+      selectionLimit: 5 - images.length, // Account for existing images
     });
 
-    handleImagePickerResponse(result);
+    if (result.assets) {
+      const newImages: ImageFile[] = result.assets.map((asset, index) => ({
+        uri: asset.uri || '',
+        type: asset.type || 'image/jpeg',
+        fileName: asset.fileName || `image_${index}.jpg`,
+        fileSize: asset.fileSize,
+      }));
+      setImages(prev => [...prev, ...newImages].slice(0, 5));
+    }
   };
 
   const takePhotoWithCamera = async () => {
@@ -99,205 +145,334 @@ const ProfileEditScreen: React.FC = () => {
     const result = await launchCamera({
       mediaType: 'photo',
       quality: 0.8,
-      maxWidth: 500,
-      maxHeight: 500,
+      maxWidth: 800,
+      maxHeight: 800,
     });
 
-    handleImagePickerResponse(result);
-  };
-
-  const handleImagePickerResponse = (response: ImagePickerResponse) => {
-    if (response.didCancel) {
-      console.log('User cancelled image picker');
-    } else if (response.errorCode) {
-      console.log('ImagePicker Error: ', response.errorMessage);
-      Alert.alert('Error', 'Failed to pick image');
-    } else if (response.assets && response.assets[0]) {
-      const selectedImage = response.assets[0];
-
-      setProfileImage({
-        uri: selectedImage.uri || '',
-        type: selectedImage.type || 'image/jpeg',
-        fileName: selectedImage.fileName || 'profile.jpg',
-        fileSize: selectedImage.fileSize,
-      });
-
-      if (selectedImage.uri) {
-        setImagePreview(selectedImage.uri);
-      }
+    if (result.assets && result.assets[0]) {
+      const newImage: ImageFile = {
+        uri: result.assets[0].uri || '',
+        type: result.assets[0].type || 'image/jpeg',
+        fileName: result.assets[0].fileName || 'photo.jpg',
+        fileSize: result.assets[0].fileSize,
+      };
+      setImages(prev => [...prev, newImage].slice(0, 5));
     }
   };
 
   const showImagePickerOptions = () => {
     Alert.alert(
-      'Change Profile Photo',
-      'Choose how you want to add a profile photo',
+      'Add Product Images',
+      'Choose how you want to add product images',
       [
         {text: 'Take Photo', onPress: takePhotoWithCamera},
-        {text: 'Choose from Gallery', onPress: selectImageFromGallery},
+        {text: 'Choose from Gallery', onPress: selectImagesFromGallery},
         {text: 'Cancel', style: 'cancel'},
       ],
     );
   };
 
-  const onSubmit = async (data: ProfileEditForm) => {
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const selectLocation = () => {
+    setShowLocationModal(true);
+  };
+
+  const handleLocationConfirm = (locationData: LocationData) => {
+    setLocation(locationData);
+    setValue('locationName', locationData.name);
+  };
+
+  const onSubmit = async (data: ExtendedProductForm) => {
+    if (images.length === 0) {
+      Alert.alert('Error', 'Please add at least one product image.');
+      return;
+    }
+
+    if (!location) {
+      Alert.alert('Error', 'Please select a location.');
+      return;
+    }
+
     try {
-      await updateProfileMutation.mutateAsync({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        profileImage: profileImage || undefined,
+      // Filter out existing images and only send new ones to the API
+      const newImages = images.filter(img => !(img as any).isExisting);
+
+      await updateProductMutation.mutateAsync({
+        id: productId,
+        data: {
+          title: data.title,
+          description: data.description,
+          price: data.price,
+          location,
+          images: newImages.length > 0 ? newImages : undefined,
+        },
       });
 
-      await refetch();
-
-      Alert.alert('Success', 'Profile updated successfully', [
+      Alert.alert('Success', 'Product updated successfully!', [
         {text: 'OK', onPress: () => navigation.goBack()},
       ]);
     } catch (error: any) {
-      Alert.alert('Error', error.message || 'Failed to update profile');
+      Alert.alert('Error', error.message || 'Failed to update product');
     }
   };
 
-  if (profileLoading) {
+  if (productLoading) {
     return (
-      <SafeAreaView
-        style={[styles.container, {backgroundColor: colors.background}]}>
-        <Header title="Edit Profile" showBackButton={true} />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text
-            style={[
-              styles.loadingText,
-              {color: colors.text},
-              fontVariants.body,
-            ]}>
-            Loading profile...
-          </Text>
-        </View>
-      </SafeAreaView>
+      <>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.background}
+          translucent={true}
+        />
+        <SafeAreaView
+          style={[styles.container, {backgroundColor: colors.background}]}>
+          <Header title="Edit Product" showBackButton={true} />
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text
+              style={[
+                styles.loadingText,
+                {color: colors.text},
+                fontVariants.body,
+              ]}>
+              Loading product...
+            </Text>
+          </View>
+        </SafeAreaView>
+      </>
     );
   }
 
-  if (profileError) {
+  if (productError || !product) {
     return (
-      <SafeAreaView
-        style={[styles.container, {backgroundColor: colors.background}]}>
-        <Header title="Edit Profile" showBackButton={true} />
-        <View style={styles.errorContainer}>
-          <Text
-            style={[
-              styles.errorText,
-              {color: colors.error},
-              fontVariants.body,
-            ]}>
-            Failed to load profile. Please try again.
-          </Text>
-          <Button title="Try Again" onPress={() => refetch()} />
-        </View>
-      </SafeAreaView>
+      <>
+        <StatusBar
+          barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+          backgroundColor={colors.background}
+          translucent={true}
+        />
+        <SafeAreaView
+          style={[styles.container, {backgroundColor: colors.background}]}>
+          <Header title="Edit Product" showBackButton={true} />
+          <View style={styles.errorContainer}>
+            <Text
+              style={[
+                styles.errorText,
+                {color: colors.error},
+                fontVariants.body,
+              ]}>
+              {productError?.message || 'Product not found'}
+            </Text>
+            <Button title="Go Back" onPress={() => navigation.goBack()} />
+          </View>
+        </SafeAreaView>
+      </>
     );
   }
 
   return (
-    <SafeAreaView
-      style={[styles.container, {backgroundColor: colors.background}]}>
-      <Header title="Edit Profile" showBackButton={true} />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.content}>
-          <TouchableOpacity
-            style={styles.imageContainer}
-            onPress={showImagePickerOptions}
-            activeOpacity={0.8}>
-            {imagePreview ? (
-              <Image source={{uri: imagePreview}} style={styles.profileImage} />
-            ) : (
-              <View
-                style={[
-                  styles.placeholderImage,
-                  {backgroundColor: colors.border},
-                ]}>
-                <Text style={[styles.placeholderText, {color: colors.text}]}>
-                  {user?.firstName?.charAt(0) || ''}
-                  {user?.lastName?.charAt(0) || ''}
-                </Text>
-              </View>
-            )}
-            <View
+    <>
+      <StatusBar
+        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
+        backgroundColor={colors.background}
+        translucent={true}
+      />
+      <SafeAreaView
+        style={[styles.container, {backgroundColor: colors.background}]}>
+        <Header title="Edit Product" showBackButton={true} />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.content}>
+            <Text
               style={[
-                styles.changePhotoButton,
-                {backgroundColor: colors.primary},
+                styles.label,
+                {color: colors.text},
+                fontVariants.bodyBold,
               ]}>
+              Product Title *
+            </Text>
+            <Input
+              name="title"
+              control={control}
+              label=""
+              placeholder="Enter product title"
+              error={errors.title?.message}
+            />
+
+            <Text
+              style={[
+                styles.label,
+                {color: colors.text},
+                fontVariants.bodyBold,
+              ]}>
+              Description *
+            </Text>
+            <Input
+              name="description"
+              control={control}
+              label=""
+              placeholder="Describe your product"
+              multiline
+              numberOfLines={4}
+              style={styles.textArea}
+              error={errors.description?.message}
+            />
+
+            <Text
+              style={[
+                styles.label,
+                {color: colors.text},
+                fontVariants.bodyBold,
+              ]}>
+              Price *
+            </Text>
+            <Controller
+              control={control}
+              name="price"
+              render={({field: {onChange, value}}) => (
+                <Input
+                  name="price"
+                  control={control}
+                  label=""
+                  placeholder="Enter price"
+                  keyboardType="numeric"
+                  value={value?.toString() || ''}
+                  onChangeText={text => {
+                    const numericValue = parseFloat(text) || 0;
+                    onChange(numericValue);
+                  }}
+                  error={errors.price?.message}
+                />
+              )}
+            />
+
+            <Text
+              style={[
+                styles.label,
+                {color: colors.text},
+                fontVariants.bodyBold,
+              ]}>
+              Location *
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.locationButton,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: colors.border,
+                },
+              ]}
+              onPress={selectLocation}>
+              <Icon name="location-on" size={20} color={colors.primary} />
               <Text
                 style={[
-                  styles.changePhotoText,
-                  {color: colors.card},
+                  styles.locationText,
+                  {color: location ? colors.text : colors.border},
+                  fontVariants.body,
+                ]}>
+                {location ? location.name : 'Tap to select location on map'}
+              </Text>
+              <Icon
+                name="keyboard-arrow-down"
+                size={20}
+                color={colors.border}
+              />
+            </TouchableOpacity>
+            {errors.locationName && (
+              <Text
+                style={[
+                  styles.errorText,
+                  {color: colors.error},
                   fontVariants.caption,
                 ]}>
-                Change
+                {errors.locationName.message}
               </Text>
+            )}
+
+            <Text
+              style={[
+                styles.label,
+                {color: colors.text},
+                fontVariants.bodyBold,
+              ]}>
+              Product Images * (Max 5)
+            </Text>
+            <View style={styles.imagesContainer}>
+              {images.map((image, index) => (
+                <View key={index} style={styles.imageWrapper}>
+                  <Image
+                    source={{uri: image.uri}}
+                    style={styles.productImage}
+                  />
+                  <TouchableOpacity
+                    style={[
+                      styles.removeImageButton,
+                      {backgroundColor: colors.error},
+                    ]}
+                    onPress={() => removeImage(index)}>
+                    <Icon name="clear" size={16} color={colors.card} />
+                  </TouchableOpacity>
+                  {/* Show indicator for existing images */}
+                  {(image as any).isExisting && (
+                    <View
+                      style={[
+                        styles.existingImageBadge,
+                        {backgroundColor: colors.success},
+                      ]}>
+                      <Text
+                        style={[
+                          styles.existingImageText,
+                          {color: colors.card},
+                        ]}>
+                        Current
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              ))}
+              {images.length < 5 && (
+                <TouchableOpacity
+                  style={[
+                    styles.addImageButton,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  onPress={showImagePickerOptions}>
+                  <Icon name="add" size={30} color={colors.primary} />
+                  <Text
+                    style={[
+                      styles.addImageText,
+                      {color: colors.text},
+                      fontVariants.caption,
+                    ]}>
+                    Add Image
+                  </Text>
+                </TouchableOpacity>
+              )}
             </View>
-          </TouchableOpacity>
-
-          <View style={styles.form}>
-            <Text
-              style={[
-                styles.label,
-                {color: colors.text},
-                fontVariants.bodyBold,
-              ]}>
-              First Name
-            </Text>
-            <Controller
-              control={control}
-              name="firstName"
-              render={({field: {onChange, onBlur, value}}) => (
-                <Input
-                  name="firstName"
-                  control={control}
-                  label=""
-                  placeholder="Enter your first name"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.firstName?.message}
-                />
-              )}
-            />
-
-            <Text
-              style={[
-                styles.label,
-                {color: colors.text},
-                fontVariants.bodyBold,
-              ]}>
-              Last Name
-            </Text>
-            <Controller
-              control={control}
-              name="lastName"
-              render={({field: {onChange, onBlur, value}}) => (
-                <Input
-                  name="lastName"
-                  control={control}
-                  label=""
-                  placeholder="Enter your last name"
-                  value={value}
-                  onChangeText={onChange}
-                  onBlur={onBlur}
-                  error={errors.lastName?.message}
-                />
-              )}
-            />
 
             <Button
-              title="Save Changes"
+              title="Update Product"
               onPress={handleSubmit(onSubmit)}
-              loading={updateProfileMutation.isPending}
+              loading={updateProductMutation.isPending}
+              variant="primary"
             />
           </View>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+
+        <LocationPickerModal
+          visible={showLocationModal}
+          onClose={() => setShowLocationModal(false)}
+          onConfirm={handleLocationConfirm}
+          initialLocation={location}
+          title="Update Product Location"
+        />
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -309,47 +484,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   content: {
-    flex: 1,
-    padding: getResponsiveValue(24),
-    alignItems: 'center',
-  },
-  imageContainer: {
-    position: 'relative',
-    marginBottom: getResponsiveValue(32),
-  },
-  profileImage: {
-    width: getResponsiveValue(150),
-    height: getResponsiveValue(150),
-    borderRadius: getResponsiveValue(75),
-  },
-  placeholderImage: {
-    width: getResponsiveValue(150),
-    height: getResponsiveValue(150),
-    borderRadius: getResponsiveValue(75),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  placeholderText: {
-    fontSize: getResponsiveValue(40),
-    fontWeight: 'bold',
-  },
-  changePhotoButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    paddingHorizontal: getResponsiveValue(12),
-    paddingVertical: getResponsiveValue(6),
-    borderRadius: getResponsiveValue(20),
-  },
-  changePhotoText: {
-    color: '#fff',
-    fontSize: getResponsiveValue(12),
-  },
-  form: {
-    width: '100%',
-  },
-  label: {
-    marginBottom: getResponsiveValue(8),
+    padding: getResponsiveValue(16),
   },
   loadingContainer: {
     flex: 1,
@@ -370,6 +505,78 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveValue(16),
     textAlign: 'center',
   },
+  label: {
+    marginBottom: getResponsiveValue(8),
+    marginTop: getResponsiveValue(8),
+  },
+  textArea: {
+    height: getResponsiveValue(100),
+    textAlignVertical: 'top',
+  },
+  locationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: getResponsiveValue(12),
+    borderRadius: getResponsiveValue(8),
+    borderWidth: 1,
+    marginBottom: getResponsiveValue(8),
+  },
+  locationText: {
+    marginLeft: getResponsiveValue(8),
+    flex: 1,
+  },
+  imagesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: getResponsiveValue(16),
+  },
+  imageWrapper: {
+    position: 'relative',
+    marginRight: getResponsiveValue(8),
+    marginBottom: getResponsiveValue(8),
+  },
+  productImage: {
+    width: getResponsiveValue(80),
+    height: getResponsiveValue(80),
+    borderRadius: getResponsiveValue(8),
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -getResponsiveValue(8),
+    right: -getResponsiveValue(8),
+    width: getResponsiveValue(24),
+    height: getResponsiveValue(24),
+    borderRadius: getResponsiveValue(12),
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  existingImageBadge: {
+    position: 'absolute',
+    bottom: -getResponsiveValue(4),
+    left: 0,
+    right: 0,
+    paddingVertical: getResponsiveValue(2),
+    borderBottomLeftRadius: getResponsiveValue(8),
+    borderBottomRightRadius: getResponsiveValue(8),
+    alignItems: 'center',
+  },
+  existingImageText: {
+    fontSize: getResponsiveValue(10),
+    fontWeight: '600',
+  },
+  addImageButton: {
+    width: getResponsiveValue(80),
+    height: getResponsiveValue(80),
+    borderRadius: getResponsiveValue(8),
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  addImageText: {
+    marginTop: getResponsiveValue(4),
+    textAlign: 'center',
+  },
 });
 
-export default ProfileEditScreen;
+export default EditProductScreen;

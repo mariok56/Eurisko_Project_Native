@@ -20,7 +20,7 @@ import Header from '../../components/molecules/Header';
 import Button from '../../components/atoms/Button';
 import Input from '../../components/atoms/Input';
 import Icon from '../../components/atoms/icons';
-import LocationInputModal from '../../components/molecules/LocationInput';
+import LocationPickerModal from '../../components/molecules/LocationPickerModal';
 import {useTheme} from '../../contexts/ThemeContext';
 import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
@@ -28,6 +28,12 @@ import {productSchema, ProductFormData} from '../../utils/validation';
 import {useCreateProduct} from '../../hooks/useProducts';
 import {ImageFile} from '../../types/auth';
 import {requestCameraPermission} from '../../utils/imagePermissions';
+
+interface LocationData {
+  name: string;
+  longitude: number;
+  latitude: number;
+}
 
 interface ExtendedProductForm extends ProductFormData {
   locationName: string;
@@ -43,11 +49,7 @@ const AddProductScreen: React.FC = () => {
   const navigation = useNavigation();
   const {colors, isDarkMode} = useTheme();
   const [images, setImages] = useState<ImageFile[]>([]);
-  const [location, setLocation] = useState<{
-    name: string;
-    longitude: number;
-    latitude: number;
-  } | null>(null);
+  const [location, setLocation] = useState<LocationData | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
   const createProductMutation = useCreateProduct();
@@ -132,13 +134,9 @@ const AddProductScreen: React.FC = () => {
     setShowLocationModal(true);
   };
 
-  const handleLocationConfirm = (locationName: string) => {
-    setLocation({
-      name: locationName,
-      longitude: 35.12345, // Dummy coordinates
-      latitude: 33.56789,
-    });
-    setValue('locationName', locationName);
+  const handleLocationConfirm = (locationData: LocationData) => {
+    setLocation(locationData);
+    setValue('locationName', locationData.name);
   };
 
   const onSubmit = async (data: ExtendedProductForm) => {
@@ -268,8 +266,13 @@ const AddProductScreen: React.FC = () => {
                   {color: location ? colors.text : colors.border},
                   fontVariants.body,
                 ]}>
-                {location ? location.name : 'Select location'}
+                {location ? location.name : 'Tap to select location on map'}
               </Text>
+              <Icon
+                name="keyboard-arrow-down"
+                size={20}
+                color={colors.border}
+              />
             </TouchableOpacity>
             {errors.locationName && (
               <Text
@@ -339,11 +342,11 @@ const AddProductScreen: React.FC = () => {
           </View>
         </ScrollView>
 
-        <LocationInputModal
+        <LocationPickerModal
           visible={showLocationModal}
           onClose={() => setShowLocationModal(false)}
           onConfirm={handleLocationConfirm}
-          title="Select Location"
+          title="Select Product Location"
         />
       </SafeAreaView>
     </>

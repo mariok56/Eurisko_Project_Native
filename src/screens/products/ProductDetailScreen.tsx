@@ -20,6 +20,7 @@ import Icon from '../../components/atoms/icons';
 import {RootStackParamList} from '../../types/navigation';
 import Header from '../../components/molecules/Header';
 import Button from '../../components/atoms/Button';
+import ProductMapView from '../../components/molecules/ProductMapView';
 import {useTheme} from '../../contexts/ThemeContext';
 import {getResponsiveValue} from '../../utils/responsive';
 import fontVariants from '../../utils/fonts';
@@ -312,29 +313,12 @@ const ProductDetailScreen: React.FC<Props> = ({route, navigation}) => {
               {product.description}
             </Text>
 
-            {/* Location */}
+            {/* Map View for Location */}
             {product.location && (
-              <View style={styles.locationSection}>
-                <Text
-                  style={[
-                    styles.sectionTitle,
-                    {color: colors.text},
-                    fontVariants.bodyBold,
-                  ]}>
-                  Location
-                </Text>
-                <View style={styles.locationRow}>
-                  <Icon name="location-on" size={20} color={colors.primary} />
-                  <Text
-                    style={[
-                      styles.locationText,
-                      {color: colors.text},
-                      fontVariants.body,
-                    ]}>
-                    {product.location.name}
-                  </Text>
-                </View>
-              </View>
+              <ProductMapView
+                location={product.location}
+                title={product.title}
+              />
             )}
 
             {/* Owner Information */}
@@ -546,18 +530,8 @@ const styles = StyleSheet.create({
     marginBottom: getResponsiveValue(24),
     lineHeight: getResponsiveValue(22),
   },
-  locationSection: {
-    marginBottom: getResponsiveValue(24),
-  },
   sectionTitle: {
     marginBottom: getResponsiveValue(8),
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  locationText: {
-    marginLeft: getResponsiveValue(8),
   },
   ownerSection: {
     marginBottom: getResponsiveValue(24),
