@@ -3,6 +3,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {StyleSheet} from 'react-native';
 import Icon from '../components/atoms/icons';
 import ProductListScreen from '../screens/products/ProductListScreen';
+import PostsScreen from '../screens/posts/PostScrenn';
 import ProfileScreen from '../screens/Profile/ProfileScreen';
 import {useTheme} from '../contexts/ThemeContext';
 import {getResponsiveValue} from '../utils/responsive';
@@ -35,6 +36,16 @@ const TabNavigator = () => {
           tabBarLabel: 'Products',
           tabBarIcon: ({color, size}) => (
             <Icon name="shopping-bag" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="PostsTab"
+        component={PostsScreen}
+        options={{
+          tabBarLabel: 'Posts',
+          tabBarIcon: ({color, size}) => (
+            <Icon name="newspaper" color={color} size={size} />
           ),
         }}
       />

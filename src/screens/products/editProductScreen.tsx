@@ -56,7 +56,6 @@ const EditProductScreen: React.FC<Props> = ({route, navigation}) => {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
 
-  // API hooks
   const {
     data: productData,
     isLoading: productLoading,
@@ -82,7 +81,6 @@ const EditProductScreen: React.FC<Props> = ({route, navigation}) => {
     },
   });
 
-  // Initialize form with existing product data
   useEffect(() => {
     if (product) {
       reset({
@@ -100,14 +98,13 @@ const EditProductScreen: React.FC<Props> = ({route, navigation}) => {
         });
       }
 
-      // Convert existing images to ImageFile format for display
       if (product.images) {
         const existingImages: ImageFile[] = product.images.map(
           (image, index) => ({
             uri: `https://backend-practice.eurisko.me${image.url}`,
             type: 'image/jpeg',
             fileName: `existing_image_${index}.jpg`,
-            isExisting: true, // Flag to identify existing images
+            isExisting: true,
           }),
         );
         setImages(existingImages);
@@ -121,7 +118,7 @@ const EditProductScreen: React.FC<Props> = ({route, navigation}) => {
       quality: 0.8,
       maxWidth: 800,
       maxHeight: 800,
-      selectionLimit: 5 - images.length, // Account for existing images
+      selectionLimit: 5 - images.length,
     });
 
     if (result.assets) {
@@ -197,7 +194,6 @@ const EditProductScreen: React.FC<Props> = ({route, navigation}) => {
     }
 
     try {
-      // Filter out existing images and only send new ones to the API
       const newImages = images.filter(img => !(img as any).isExisting);
 
       await updateProductMutation.mutateAsync({
@@ -414,7 +410,6 @@ const EditProductScreen: React.FC<Props> = ({route, navigation}) => {
                     onPress={() => removeImage(index)}>
                     <Icon name="clear" size={16} color={colors.card} />
                   </TouchableOpacity>
-                  {/* Show indicator for existing images */}
                   {(image as any).isExisting && (
                     <View
                       style={[
@@ -525,6 +520,7 @@ const styles = StyleSheet.create({
     marginLeft: getResponsiveValue(8),
     flex: 1,
   },
+
   imagesContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',

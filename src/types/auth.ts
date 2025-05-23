@@ -9,6 +9,9 @@ export interface User {
   isEmailVerified: boolean;
 }
 
+export interface Post {
+  createdAt?: string;
+}
 export interface AuthState {
   user: User | null;
   isAuthenticated: boolean;

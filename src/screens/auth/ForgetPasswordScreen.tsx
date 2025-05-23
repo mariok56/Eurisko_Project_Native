@@ -16,7 +16,6 @@ import {useForgotPassword} from '../../hooks/useAuth';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ForgotPassword'>;
 
-// Create a schema for forgot password
 const forgotPasswordSchema = z.object({
   email: z.string().email('Invalid email address'),
 });
@@ -42,15 +41,12 @@ const ForgotPasswordScreen: React.FC<Props> = ({navigation}) => {
     try {
       await forgotPasswordMutation.mutateAsync(data.email);
 
-      // Alert user of success
       Alert.alert(
         'Email Sent',
         'Password reset email sent successfully. Please check your inbox.',
         [{text: 'OK', onPress: () => navigation.navigate('Login')}],
       );
-    } catch (error) {
-      // Error handling is done by the mutation
-    }
+    } catch (error) {}
   };
 
   const formFields = [

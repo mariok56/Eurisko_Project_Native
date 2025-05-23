@@ -8,7 +8,6 @@ interface IconProps {
   style?: any;
 }
 
-// Icon mapping for common icons used in the app
 const iconMap: Record<string, string> = {
   // Navigation icons
   add: '+',
@@ -31,6 +30,9 @@ const iconMap: Record<string, string> = {
   // Tab icons
   person: '👤',
   'shopping-bag': '🛍️',
+  posts: '📰', // Add this
+  news: '📰', // Add this
+  article: '📄', // Add this
 
   // Default fallback
   default: '•',
@@ -62,7 +64,6 @@ const Icon: React.FC<IconProps> = ({
 const styles = StyleSheet.create({
   icon: {
     textAlign: 'center',
-    // Ensure consistent alignment
     lineHeight: undefined,
   },
 });

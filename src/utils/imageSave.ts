@@ -5,11 +5,9 @@ import RNFS from 'react-native-fs';
 export const requestPhotoLibraryPermissions = async (): Promise<boolean> => {
   if (Platform.OS === 'android') {
     try {
-      // For Android 13+ (API level 33), we need different permissions
       const androidVersion = Platform.Version;
 
       if (androidVersion >= 33) {
-        // Android 13+ uses scoped storage
         const granted = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
           PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
@@ -22,7 +20,6 @@ export const requestPhotoLibraryPermissions = async (): Promise<boolean> => {
             PermissionsAndroid.RESULTS.GRANTED
         );
       } else {
-        // Android 12 and below
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
           {
@@ -39,14 +36,13 @@ export const requestPhotoLibraryPermissions = async (): Promise<boolean> => {
       return false;
     }
   }
-  return true; // iOS doesn't need explicit permission for saving to photos
+  return true;
 };
 
 export const saveImageToDevice = async (imageUrl: string): Promise<boolean> => {
   try {
     console.log('Attempting to save image:', imageUrl);
 
-    // Request permissions first
     const hasPermission = await requestPhotoLibraryPermissions();
     if (!hasPermission) {
       Alert.alert(
@@ -56,7 +52,6 @@ export const saveImageToDevice = async (imageUrl: string): Promise<boolean> => {
       return false;
     }
 
-    // Method 1: Try direct save with CameraRoll (works for URLs)
     try {
       await CameraRoll.save(imageUrl, {type: 'photo'});
       Alert.alert('Success', 'Image saved to your photo library!');
@@ -67,7 +62,6 @@ export const saveImageToDevice = async (imageUrl: string): Promise<boolean> => {
         directSaveError,
       );
 
-      // Method 2: Download first, then save
       const timestamp = Date.now();
       const fileName = `product_image_${timestamp}.jpg`;
       const downloadDest = `${RNFS.TemporaryDirectoryPath}/${fileName}`;
@@ -82,10 +76,8 @@ export const saveImageToDevice = async (imageUrl: string): Promise<boolean> => {
       if (downloadResult.statusCode === 200) {
         console.log('Download successful, saving to camera roll');
 
-        // Save the downloaded file to camera roll
         await CameraRoll.save(`file://${downloadDest}`, {type: 'photo'});
 
-        // Clean up the temporary file
         try {
           await RNFS.unlink(downloadDest);
         } catch (unlinkError) {
@@ -107,7 +99,6 @@ export const saveImageToDevice = async (imageUrl: string): Promise<boolean> => {
   }
 };
 
-// Alternative method using react-native-fs only (if CameraRoll doesn't work)
 export const saveImageToDeviceAlternative = async (
   imageUrl: string,
 ): Promise<boolean> => {
@@ -124,8 +115,6 @@ export const saveImageToDeviceAlternative = async (
     const timestamp = Date.now();
     const fileName = `product_image_${timestamp}.jpg`;
 
-    // For Android, save to Pictures directory
-    // For iOS, save to Documents directory
     const downloadDest =
       Platform.OS === 'android'
         ? `${RNFS.PicturesDirectoryPath}/${fileName}`

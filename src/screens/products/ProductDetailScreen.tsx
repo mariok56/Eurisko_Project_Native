@@ -40,7 +40,6 @@ const ProductDetailScreen: React.FC<Props> = ({route, navigation}) => {
   const {colors, isDarkMode} = useTheme();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-  // API hooks
   const {
     data: productData,
     isLoading: productLoading,
@@ -135,7 +134,6 @@ const ProductDetailScreen: React.FC<Props> = ({route, navigation}) => {
               console.log('Saving image:', imageUrl);
               const success = await saveImageToDevice(imageUrl);
               if (!success) {
-                // Try alternative method if the first one fails
                 console.log('Trying alternative save method...');
                 await saveImageToDeviceAlternative(imageUrl);
               }

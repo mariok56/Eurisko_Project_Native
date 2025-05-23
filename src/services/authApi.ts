@@ -2,7 +2,6 @@ import apiClient from '../lib/axioInstance';
 import {endpoints} from '../constant/endpoint';
 import {ImageFile} from '../types/auth';
 
-// Types for API responses and requests
 interface AuthResponse {
   success: boolean;
   data: {
@@ -246,5 +245,12 @@ export const updateUserProfile = async (data: {
     },
   );
 
+  return response.data;
+};
+export const getUserProfileById = async (
+  userId: string,
+): Promise<AuthResponse> => {
+  const url = endpoints.user.getUserById.replace(':userId', userId);
+  const response = await apiClient.get<AuthResponse>(url);
   return response.data;
 };

@@ -30,10 +30,8 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
   const {setAuthenticated} = useAuthStore();
   const queryClient = useQueryClient();
 
-  // Add this ref to track if we've already sent the initial OTP request
   const initialOtpRequestSent = useRef(false);
 
-  // React Query mutations
   const verifyOtpMutation = useVerifyOtp();
   const resendOtpMutation = useResendOtp();
   const loginMutation = useLogin();
@@ -49,16 +47,12 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
     },
   });
 
-  // Automatically request a new OTP when component mounts - FIXED VERSION WITH PROPER DEPENDENCIES
   useEffect(() => {
-    // Only send OTP once when component mounts
     const autoResendOtp = async () => {
-      // Check if we've already sent the initial request to prevent duplicates
       if (initialOtpRequestSent.current) {
         return;
       }
 
-      // Mark that we've sent the request
       initialOtpRequestSent.current = true;
 
       try {
@@ -68,11 +62,10 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
         setVerificationMessage(
           'A verification code has been sent to your email',
         );
-        setTimer(60); // Reset timer
+        setTimer(60);
       } catch (error: any) {
         setMessageType('error');
 
-        // Error handling is now user-friendly from the hook
         setVerificationMessage(
           error.message || 'Failed to send verification code',
         );
@@ -80,8 +73,6 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
     };
 
     autoResendOtp();
-
-    // Include the dependencies but still use the ref check to prevent multiple calls
   }, [email, resendOtpMutation, setMessageType, setTimer]);
 
   useEffect(() => {
@@ -97,14 +88,11 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
     setVerificationMessage(null);
 
     try {
-      // Ensure OTP is properly formatted
       const formattedOtp = data.code.toString().trim();
       console.log('Submitting verification with OTP:', formattedOtp);
 
-      // Verify OTP
       await verifyOtpMutation.mutateAsync({email, otp: formattedOtp});
 
-      // OTP verification successful, now try to login
       if (password) {
         try {
           await loginMutation.mutateAsync({
@@ -113,13 +101,10 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
             token_expires_in: '1y',
           });
 
-          // Login successful
           setAuthenticated(true);
 
-          // Invalidate user profile query to fetch fresh data
           queryClient.invalidateQueries({queryKey: ['user-profile']});
 
-          // Show success message
           Alert.alert(
             'Success',
             'Your email has been verified and you are now logged in!',
@@ -132,11 +117,9 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
           );
         }
       } else {
-        // Handle case where password might not be available
         setMessageType('success');
         setVerificationMessage('Verification successful! Please log in.');
 
-        // Redirect to login
         setTimeout(() => {
           navigation.navigate('Login');
         }, 1500);
@@ -147,9 +130,7 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
     }
   };
 
-  // Updated to prevent rapid multiple clicks
   const handleResendCode = async () => {
-    // Prevent multiple rapid clicks or resending while request is in progress
     if (resendOtpMutation.isPending || timer > 0) {
       return;
     }
@@ -159,7 +140,6 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
     try {
       await resendOtpMutation.mutateAsync(email);
 
-      // Resend successful
       setTimer(60);
       setMessageType('success');
       setVerificationMessage('A new code has been sent to your email');
@@ -211,7 +191,6 @@ const VerificationScreen: React.FC<Props> = ({route, navigation}) => {
             control={control}
             error={errors.code?.message}
             onComplete={code => {
-              // Auto-submit when all digits are entered
               if (code.length === 6) {
                 handleSubmit(onSubmit)();
               }

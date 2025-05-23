@@ -4,7 +4,6 @@ import {storeTokens, getTokens} from '../lib/axioInstance';
 import {ImageFile} from '../types/auth';
 import {getUserFriendlyErrorMessage} from '../utils/errorHandling';
 
-// Types for auth data
 interface LoginData {
   email: string;
   password: string;
@@ -24,7 +23,6 @@ interface VerifyOtpData {
   otp: string;
 }
 
-// Hook for login mutation with improved error handling
 export const useLogin = () => {
   return useMutation({
     mutationFn: async ({
@@ -62,7 +60,6 @@ export const useLogin = () => {
   });
 };
 
-// Hook for signup mutation with improved error handling
 export const useSignup = () => {
   return useMutation({
     mutationFn: async ({
@@ -95,7 +92,6 @@ export const useSignup = () => {
   });
 };
 
-// Hook for OTP verification mutation with improved error handling
 export const useVerifyOtp = () => {
   return useMutation({
     mutationFn: async ({email, otp}: VerifyOtpData) => {
@@ -116,7 +112,6 @@ export const useVerifyOtp = () => {
   });
 };
 
-// Hook for resend OTP mutation with improved error handling
 export const useResendOtp = () => {
   return useMutation({
     mutationFn: async (email: string) => {
@@ -137,7 +132,6 @@ export const useResendOtp = () => {
   });
 };
 
-// Hook for forgot password mutation with improved error handling
 export const useForgotPassword = () => {
   return useMutation({
     mutationFn: async (email: string) => {
@@ -160,7 +154,6 @@ export const useForgotPassword = () => {
   });
 };
 
-// Hook to get user profile with improved error handling
 export const useUserProfile = () => {
   return useQuery({
     queryKey: ['user-profile'],
@@ -201,12 +194,11 @@ export const useUserProfile = () => {
         throw new Error(userFriendlyMessage);
       }
     },
-    retry: false, // Don't retry on failure
+    retry: false,
     refetchOnWindowFocus: false,
   });
 };
 
-// Hook to update user profile with improved error handling
 export const useUpdateProfile = () => {
   return useMutation({
     mutationFn: async (data: {
@@ -221,14 +213,13 @@ export const useUpdateProfile = () => {
           throw new Error(response.data.message || 'Failed to update profile');
         }
 
-        // Return mapped user data
         const user = response.data.user;
         if (!user) {
           throw new Error('User data not found in response');
         }
 
         return {
-          id: user.id, // API returns 'id' field according to the API docs
+          id: user.id,
           email: user.email,
           firstName: user.firstName,
           lastName: user.lastName,
@@ -236,10 +227,46 @@ export const useUpdateProfile = () => {
           isEmailVerified: user.isEmailVerified,
         };
       } catch (error) {
-        // Convert technical error to user-friendly message
         const userFriendlyMessage = getUserFriendlyErrorMessage(error);
         throw new Error(userFriendlyMessage);
       }
     },
+  });
+};
+export const useUserProfileById = (userId: string) => {
+  return useQuery({
+    queryKey: ['user-profile', userId],
+    queryFn: async () => {
+      try {
+        const response = await authApi.getUserProfileById(userId);
+
+        if (!response.success || !response.data.user) {
+          throw new Error(
+            response.data.message || 'Failed to get user profile',
+          );
+        }
+
+        const user = response.data.user;
+        if (!user) {
+          throw new Error('User data not found in response');
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profileImage: user.profileImage,
+          isEmailVerified: user.isEmailVerified,
+          createdAt: user.createdAt,
+        };
+      } catch (error) {
+        const userFriendlyMessage = getUserFriendlyErrorMessage(error);
+        throw new Error(userFriendlyMessage);
+      }
+    },
+    enabled: !!userId,
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 };

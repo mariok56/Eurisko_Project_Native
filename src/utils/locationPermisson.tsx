@@ -26,7 +26,7 @@ export const requestLocationPermission = async (): Promise<boolean> => {
       return false;
     }
   }
-  return true; // iOS handles this through Info.plist
+  return true;
 };
 
 export const getCurrentLocation = (): Promise<LocationCoordinates> => {

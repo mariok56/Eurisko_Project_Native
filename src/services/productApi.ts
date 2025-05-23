@@ -3,7 +3,6 @@ import {endpoints} from '../constant/endpoint';
 import {Product, ProductFilter, PaginationData} from '../types/product';
 import {ImageFile} from '../types/auth';
 
-// Types for API responses
 interface ProductsResponse {
   success: boolean;
   data: Product[];

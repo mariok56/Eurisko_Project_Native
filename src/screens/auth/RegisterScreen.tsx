@@ -188,7 +188,7 @@ const RegisterScreen: React.FC<Props> = ({navigation}) => {
       <SafeAreaView
         style={[styles.container, {backgroundColor: colors.background}]}
         edges={['top']}>
-        <Header title="Create Account" showBackButton />
+        <Header title="Create Account" showBackButton showThemeToggle={false} />
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.content}>

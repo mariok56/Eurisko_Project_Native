@@ -21,7 +21,6 @@ import {getTokens} from '../lib/axioInstance';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-// Custom hook to check authentication status
 const useInitAuth = () => {
   const {setAuthenticated} = useAuthStore();
 
@@ -31,7 +30,6 @@ const useInitAuth = () => {
       const tokens = await getTokens();
       const isAuthenticated = !!tokens?.accessToken;
 
-      // Update the Zustand store
       setAuthenticated(isAuthenticated);
 
       return isAuthenticated;
@@ -53,9 +51,8 @@ const AppNavigator: React.FC = () => {
     }
   }, [isDarkMode, colors]);
 
-  // Show a loading state if we're still initializing
   if (authInitQuery.isLoading) {
-    return null; // You could return a splash screen here
+    return null;
   }
 
   return (

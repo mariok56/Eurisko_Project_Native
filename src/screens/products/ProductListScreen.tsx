@@ -78,7 +78,7 @@ const ProductListScreen: React.FC = () => {
       setSortBy('price');
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     }
-    setCurrentPage(1); // Reset to first page when sorting changes
+    setCurrentPage(1);
   }, [sortBy, sortOrder]);
 
   const handleLoadMore = useCallback(() => {
@@ -91,7 +91,6 @@ const ProductListScreen: React.FC = () => {
     navigation.navigate('AddProduct');
   }, [navigation]);
 
-  // Memoized LoadingMore component to prevent unnecessary re-renders
   const showLoadingMore =
     !searchQuery_trimmed && pagination?.hasNextPage && activeQuery.isFetching;
 

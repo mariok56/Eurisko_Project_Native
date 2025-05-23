@@ -1,4 +1,3 @@
-// src/utils/permissions.ts (or /utils/imagePermissions.ts)
 import {PermissionsAndroid, Platform, Alert} from 'react-native';
 
 export const requestCameraPermission = async (): Promise<boolean> => {
